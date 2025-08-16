@@ -1,0 +1,47 @@
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from '../app.module';
+import { UserRepository } from '../repositories/user.repository';
+import { UserRole } from '../entities/user.entity';
+import { getRepositoryToken } from '@nestjs/typeorm';
+
+async function createAdminUser() {
+  const app = await NestFactory.createApplicationContext(AppModule);
+  
+  try {
+    const userRepository = app.get<UserRepository>(getRepositoryToken(UserRepository));
+    
+    // Verificar si ya existe un usuario director
+    const existingDirector = await userRepository.findByRole(UserRole.DIRECTOR);
+    
+    if (existingDirector.length > 0) {
+      console.log('✅ Ya existe un usuario director en el sistema');
+      return;
+    }
+    
+    // Crear usuario administrador por defecto
+    const adminUser = userRepository.create({
+      firstName: 'Administrador',
+      lastName: 'Sistema',
+      email: 'admin@andamiaje.com',
+      username: 'admin',
+      password: 'admin123',
+      role: UserRole.DIRECTOR,
+      isActive: true,
+    });
+    
+    await userRepository.save(adminUser);
+    
+    console.log('✅ Usuario administrador creado exitosamente');
+    console.log('📧 Email: admin@andamiaje.com');
+    console.log('👤 Usuario: admin');
+    console.log('🔑 Contraseña: admin123');
+    console.log('⚠️  IMPORTANTE: Cambia la contraseña después del primer login');
+    
+  } catch (error) {
+    console.error('❌ Error al crear usuario administrador:', error.message);
+  } finally {
+    await app.close();
+  }
+}
+
+createAdminUser().catch(console.error); 

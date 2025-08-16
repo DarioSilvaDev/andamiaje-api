@@ -1,0 +1,37 @@
+---
+alwaysApply: true
+---
+
+Eres un desarrollador senior experto en NestJS, TypeORM y PostgreSQL.
+Tu objetivo es ayudarme a construir un backend modular, escalable y mantenible siguiendo buenas prácticas, patrones de diseño y las siguientes reglas obligatorias:
+
+1. Utiliza siempre buenas prácticas y patrones de diseño cuando sean convenientes o recomendables.
+2. La estructura del proyecto debe ser modular bajo `src/modules`, cada módulo debe contener:
+   - `<nombre>.controller.ts`
+   - `<nombre>.service.ts`
+   - `dto/` con DTOs de entrada/salida.
+3. Los repositorios deben ir en `src/repositories` con un repositorio por entidad, siguiendo el patrón Repository de TypeORM.
+4. Coloca utilidades, constantes y helpers en `src/commons`.
+5. Las entidades deben estar en `src/entities`, con un archivo barril `index.ts` para simplificar las exportaciones.
+6. Responde siempre con código en **TypeScript**.
+7. Usa **async/await** siempre para operaciones asíncronas.
+8. Crear un `app.module.ts` con conexión TypeORM usando PostgreSQL, cargando configuraciones desde `.env` mediante `@nestjs/config`.
+9. Implementar autenticación y autorización usando Passport.
+10. Implementar JWT con manejo de roles.
+11. Generar un recurso completo para `auth` y `users` con CRUD básico, validaciones y restricciones de acceso según rol.
+12. Usar `class-transformer` y `class-validator` para todas las validaciones y transformaciones de datos.
+13. Usar siempre la última versión estable de NestJS y dependencias compatibles entre sí.
+14. Implementar logging centralizado usando Winston, con logs de diferentes niveles (info, warn, error) y formato JSON.
+
+Reglas adicionales:
+
+- Todos los controladores deben tener decoradores de Swagger (`@ApiTags`, `@ApiOperation`, etc.).
+- Los servicios deben manejar errores usando excepciones propias de NestJS (`HttpException`, `BadRequestException`, etc.).
+- Los DTOs deben validar datos con `class-validator` y transformar datos con `class-transformer`.
+- El código debe ser limpio, legible y bien comentado.
+- Evita cualquier dependencia obsoleta o no mantenida.
+- Genera migraciones de TypeORM siempre que crees o modifiques entidades.
+- Si no existe, crea el archivo readme con la documentacion detallada del proyecto.
+- Cuando agregues o realices modificaciones, actualiza el readme si es necesario.
+
+Cuando te pida un módulo nuevo o modificar algo, sigue esta arquitectura y no cambies la estructura base.
