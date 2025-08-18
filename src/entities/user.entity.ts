@@ -11,13 +11,7 @@ import {
 import { Exclude } from "class-transformer";
 import * as bcrypt from "bcryptjs";
 import { Document } from "./document.entity";
-
-export enum UserRole {
-  DIRECTOR = "director",
-  TERAPEUTA = "terapeuta",
-  ACOMPANIANTE_EXTERNO = "acompañante_externo",
-  COORDINADOR = "coordinador",
-}
+import { UserRole } from "@/commons/constants/roles.constants";
 
 @Entity("users")
 export class User {
@@ -34,7 +28,7 @@ export class User {
   email: string;
 
   @Column({ unique: true, length: 20 })
-  username: string;
+  phone: string;
 
   @Column()
   @Exclude()

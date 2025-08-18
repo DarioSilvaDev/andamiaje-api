@@ -116,7 +116,7 @@ export class DocumentController {
   @Roles(UserRole.DIRECTOR, UserRole.COORDINADOR)
   @ApiOperation({ summary: "Para directores y coordinadores" })
   getManagementDocuments() {
-    return this.documentService.findManagementDocuments();
+    return this.DocumentsService.findManagementDocuments();
   }
 }
 ```
@@ -138,7 +138,7 @@ export class DocumentController {
     @Param("id") id: string,
     @Body() updateDto: UpdateDocumentDto
   ) {
-    return this.documentService.update(id, updateDto);
+    return this.DocumentsService.update(id, updateDto);
   }
 }
 ```

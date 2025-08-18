@@ -1,64 +1,71 @@
-import { Repository, EntityRepository } from 'typeorm';
-import { Document, DocumentStatus, DocumentType } from '@/entities/document.entity';
-import { UserRole } from '@/entities/user.entity';
+import { Repository } from "typeorm";
+import {
+  Document,
+  DocumentStatus,
+  DocumentType,
+} from "@/entities/document.entity";
+import { UserRole } from "@/commons/constants/roles.constants";
+import { User } from "@/entities";
 
-@EntityRepository(Document)
 export class DocumentRepository extends Repository<Document> {
   async findByStatus(status: DocumentStatus): Promise<Document[]> {
     return this.find({
       where: { status },
-      relations: ['createdBy', 'approvedBy', 'files'],
-      order: { createdAt: 'DESC' },
+      relations: ["createdBy", "approvedBy", "files"],
+      order: { createdAt: "DESC" },
     });
   }
 
   async findByType(type: DocumentType): Promise<Document[]> {
     return this.find({
       where: { type },
-      relations: ['createdBy', 'approvedBy', 'files'],
-      order: { createdAt: 'DESC' },
+      relations: ["createdBy", "approvedBy", "files"],
+      order: { createdAt: "DESC" },
     });
   }
 
-  async findByCreator(creatorId: string): Promise<Document[]> {
+  async findByCreator(creatorId: User): Promise<Document[]> {
     return this.find({
-      where: { createdById: creatorId },
-      relations: ['createdBy', 'approvedBy', 'files'],
-      order: { createdAt: 'DESC' },
+      where: { createdBy: creatorId },
+      relations: ["createdBy", "approvedBy", "files"],
+      order: { createdAt: "DESC" },
     });
   }
 
   async findPendingApproval(): Promise<Document[]> {
     return this.find({
-      where: { status: DocumentStatus.PENDING_APPROVAL },
-      relations: ['createdBy', 'files'],
-      order: { createdAt: 'ASC' },
+      where: { status: DocumentStatus.PENDING },
+      relations: ["createdBy", "files"],
+      order: { createdAt: "ASC" },
     });
   }
 
   async findApprovedDocuments(): Promise<Document[]> {
     return this.find({
       where: { status: DocumentStatus.APPROVED },
-      relations: ['createdBy', 'approvedBy', 'files'],
-      order: { approvedAt: 'DESC' },
+      relations: ["createdBy", "approvedBy", "files"],
+      order: { approvedAt: "DESC" },
     });
   }
 
   async findDocumentsByRole(role: UserRole): Promise<Document[]> {
-    const query = this.createQueryBuilder('document')
-      .leftJoinAndSelect('document.createdBy', 'creator')
-      .leftJoinAndSelect('document.approvedBy', 'approver')
-      .leftJoinAndSelect('document.files', 'files');
+    const query = this.createQueryBuilder("document")
+      .leftJoinAndSelect("document.createdBy", "creator")
+      .leftJoinAndSelect("document.approvedBy", "approver")
+      .leftJoinAndSelect("document.files", "files");
 
     switch (role) {
       case UserRole.DIRECTOR:
         return query.getMany();
       case UserRole.TERAPEUTA:
       case UserRole.ACOMPANIANTE_EXTERNO:
-      case UserRole.COORDINADOR:
+      case UserRole.COORDINADOR_ALUMNO:
+      case UserRole.COORDINADOR_FAMILIA:
         return query
-          .where('creator.role = :role', { role })
-          .orWhere('document.status = :approvedStatus', { approvedStatus: DocumentStatus.APPROVED })
+          .where("creator.role = :role", { role })
+          .orWhere("document.status = :approvedStatus", {
+            approvedStatus: DocumentStatus.APPROVED,
+          })
           .getMany();
       default:
         return [];
@@ -71,7 +78,7 @@ export class DocumentRepository extends Repository<Document> {
         status: DocumentStatus.APPROVED,
         pdfGeneratedAt: null,
       },
-      relations: ['createdBy', 'files'],
+      relations: ["createdBy", "files"],
     });
   }
 
@@ -79,7 +86,7 @@ export class DocumentRepository extends Repository<Document> {
     documentId: string,
     status: DocumentStatus,
     approvedById?: string,
-    rejectionReason?: string,
+    rejectionReason?: string
   ): Promise<void> {
     const updateData: any = { status };
 
@@ -97,7 +104,7 @@ export class DocumentRepository extends Repository<Document> {
   async markPDFAsGenerated(documentId: string, pdfPath: string): Promise<void> {
     await this.update(documentId, {
       pdfGeneratedAt: new Date(),
-      pdfPath,
+      // pdfPath,
     });
   }
-} 
+}

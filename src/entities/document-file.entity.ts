@@ -6,12 +6,12 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
-} from 'typeorm';
-import { Document } from './document.entity';
+} from "typeorm";
+import { Document } from "./document.entity";
 
-@Entity('document_files')
+@Entity("document_files")
 export class DocumentFile {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
   @Column({ length: 255 })
@@ -19,6 +19,9 @@ export class DocumentFile {
 
   @Column({ length: 255 })
   filename: string;
+
+  @Column({ type: "varchar", nullable: true })
+  fileUrl: string | null;
 
   @Column({ length: 100 })
   mimeType: string;
@@ -36,9 +39,9 @@ export class DocumentFile {
   isMainFile: boolean;
 
   // Relaciones
-  @ManyToOne('Document', { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'document_id' })
-  document: any;
+  @ManyToOne(() => Document, (doc) => doc.attachments, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "document_id" })
+  document: Document;
 
   @Column()
   documentId: string;
@@ -51,29 +54,29 @@ export class DocumentFile {
 
   // Métodos
   getFileExtension(): string {
-    return this.originalName.split('.').pop()?.toLowerCase() || '';
+    return this.originalName.split(".").pop()?.toLowerCase() || "";
   }
 
   isImage(): boolean {
-    return this.mimeType.startsWith('image/');
+    return this.mimeType.startsWith("image/");
   }
 
   isPDF(): boolean {
-    return this.mimeType === 'application/pdf';
+    return this.mimeType === "application/pdf";
   }
 
   isDocument(): boolean {
     return [
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'text/plain',
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "text/plain",
     ].includes(this.mimeType);
   }
 
   getReadableSize(): string {
-    const units = ['B', 'KB', 'MB', 'GB'];
+    const units = ["B", "KB", "MB", "GB"];
     let size = this.size;
     let unitIndex = 0;
 
@@ -84,4 +87,4 @@ export class DocumentFile {
 
     return `${size.toFixed(2)} ${units[unitIndex]}`;
   }
-} 
+}

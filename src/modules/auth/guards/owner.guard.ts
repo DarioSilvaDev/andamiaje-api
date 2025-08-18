@@ -1,6 +1,11 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { UserRole } from '@/entities/user.entity';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { UserRole } from "@/commons/constants/roles.constants";
 
 export interface OwnerCheck {
   entityName: string;
@@ -13,18 +18,22 @@ export class OwnerGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const ownerCheck = this.reflector.get<OwnerCheck>('ownerCheck', context.getHandler());
-    
+    const ownerCheck = this.reflector.get<OwnerCheck>(
+      "ownerCheck",
+      context.getHandler()
+    );
+
     if (!ownerCheck) {
       return true;
     }
 
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-    const resourceId = request.params[ownerCheck.idField] || request.body[ownerCheck.idField];
+    const resourceId =
+      request.params[ownerCheck.idField] || request.body[ownerCheck.idField];
 
     if (!user || !resourceId) {
-      throw new ForbiddenException('Acceso denegado');
+      throw new ForbiddenException("Acceso denegado");
     }
 
     // Los directores pueden acceder a todo
@@ -37,4 +46,4 @@ export class OwnerGuard implements CanActivate {
     // ya que necesitamos acceder a la base de datos
     return true;
   }
-} 
+}

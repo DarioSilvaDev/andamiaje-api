@@ -1,31 +1,34 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { InjectRepository } from '@nestjs/typeorm';
-import { UserRepository } from '@/repositories/user.repository';
-import { User, UserRole } from '@/entities/user.entity';
-import { LoginDto } from './dto/login.dto';
-import { AuthResponseDto } from './dto/auth-response.dto';
-import { envs } from '@/config/envs';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { InjectRepository } from "@nestjs/typeorm";
+import { UserRepository } from "@/repositories/user.repository";
+import { User } from "@/entities/user.entity";
+import { LoginDto } from "./dto/login.dto";
+import { AuthResponseDto } from "./dto/auth-response.dto";
+import { envs } from "@/config/envs";
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(UserRepository)
     private readonly userRepository: UserRepository,
-    private readonly jwtService: JwtService,
+    private readonly jwtService: JwtService
   ) {}
 
   async validateUser(username: string, password: string): Promise<User> {
-    const user = await this.userRepository.findByUsername(username) ||
-                 await this.userRepository.findByEmail(username);
+    const user = await this.userRepository.findByEmail(username);
 
     if (!user || !user.isActive) {
-      throw new UnauthorizedException('Credenciales inválidas');
+      throw new UnauthorizedException("Credenciales inválidas");
     }
 
     const isPasswordValid = await user.validatePassword(password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Credenciales inválidas');
+      throw new UnauthorizedException("Credenciales inválidas");
     }
 
     // Actualizar último login
@@ -39,7 +42,6 @@ export class AuthService {
 
     const payload = {
       sub: user.id,
-      username: user.username,
       email: user.email,
       role: user.role,
     };
@@ -65,7 +67,6 @@ export class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        username: user.username,
         role: user.role,
         isActive: user.isActive,
       },
@@ -84,12 +85,11 @@ export class AuthService {
       });
 
       if (!user) {
-        throw new UnauthorizedException('Usuario no encontrado');
+        throw new UnauthorizedException("Usuario no encontrado");
       }
 
       const newPayload = {
         sub: user.id,
-        username: user.username,
         email: user.email,
         role: user.role,
       };
@@ -114,14 +114,13 @@ export class AuthService {
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email,
-          username: user.username,
           role: user.role,
           isActive: user.isActive,
         },
         expiresIn,
       };
     } catch (error) {
-      throw new UnauthorizedException('Token de refresco inválido');
+      throw new UnauthorizedException("Token de refresco inválido");
     }
   }
 
@@ -129,7 +128,7 @@ export class AuthService {
     try {
       return this.jwtService.verify(token, { secret: envs.JWT_SECRET });
     } catch (error) {
-      throw new UnauthorizedException('Token inválido');
+      throw new UnauthorizedException("Token inválido");
     }
   }
 
@@ -138,16 +137,16 @@ export class AuthService {
     const value = parseInt(expiresIn.slice(0, -1));
 
     switch (unit) {
-      case 's':
+      case "s":
         return value;
-      case 'm':
+      case "m":
         return value * 60;
-      case 'h':
+      case "h":
         return value * 60 * 60;
-      case 'd':
+      case "d":
         return value * 24 * 60 * 60;
       default:
         return 86400; // 24 horas por defecto
     }
   }
-} 
+}

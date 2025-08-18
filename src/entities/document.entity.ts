@@ -7,50 +7,65 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
-} from 'typeorm';
-import { User, UserRole } from './user.entity';
+} from "typeorm";
+import { UserRole } from "@/commons/constants/roles.constants";
+import { User } from "./user.entity";
+import { DocumentFile } from "./document-file.entity";
 
 export enum DocumentStatus {
-  DRAFT = 'draft',
-  PENDING_APPROVAL = 'pending_approval',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
+  DRAFT = "draft",
+  PENDING = "pending",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+}
+
+export enum DocumentScope {
+  PACIENTE = "paciente",
+  ALUMNO = "alumno",
+  FAMILIA = "familia",
 }
 
 export enum DocumentType {
-  EVALUACION = 'evaluacion',
-  INFORME = 'informe',
-  PLAN_TERAPEUTICO = 'plan_terapeutico',
-  SEGUIMIENTO = 'seguimiento',
-  OTRO = 'otro',
+  PLAN_TRABAJO = "plan_trabajo",
+  INFORME_SEMESTRAL = "informe_semestral",
+  ACTAS = "actas",
+  REPORTE_MENSUAL = "reporte_mensual",
+  SEGUIMIENTO_ACOMPANANTE = "seguimiento_acompaniante_externo",
+  SEGUIMIENTO_FAMILIA = "seguimiento_familia",
+  FACTURA = "factura",
 }
 
-@Entity('documents')
+@Entity("documents")
 export class Document {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
   @Column({ length: 200 })
   title: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   description: string;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: DocumentType,
-    default: DocumentType.OTRO,
   })
   type: DocumentType;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: DocumentStatus,
     default: DocumentStatus.DRAFT,
   })
   status: DocumentStatus;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: "enum", enum: DocumentScope })
+  scope: DocumentScope;
+
+  @Column({ type: "uuid", nullable: true })
+  scopeEntityId: string | null; // referencia concreta (ej: alumnoId)
+
+  @Column({ type: "jsonb", nullable: true })
   content: Record<string, any>;
 
   @Column({ nullable: true })
@@ -59,32 +74,38 @@ export class Document {
   @Column({ nullable: true })
   rejectedAt: Date;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   rejectionReason: string;
 
   @Column({ nullable: true })
   pdfGeneratedAt: Date;
 
-  @Column({ nullable: true })
-  pdfPath: string;
+  @Column({ type: "varchar", nullable: true })
+  fileUrl: string | null;
 
-  // Relaciones
-  @ManyToOne('User', { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'created_by' })
-  createdBy: any;
+  // Usuario creador
+  @ManyToOne(() => User, (user) => user.createdDocuments, {
+    eager: true,
+    onDelete: "CASCADE",
+  })
+  @JoinColumn({ name: "created_by" })
+  createdBy: User;
 
-  @Column()
-  createdById: string;
+  // @Column({ type: "uuid" })
+  // createdById: string;
 
-  @ManyToOne('User', { nullable: true })
-  @JoinColumn({ name: 'approved_by' })
-  approvedBy: any;
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: "approved_by" })
+  approvedBy: User | null;
 
-  @Column({ nullable: true })
+  @Column({ type: "uuid", nullable: true })
   approvedById: string;
 
-  @OneToMany('DocumentFile', 'document')
-  files: any[];
+  @OneToMany(() => DocumentFile, (file) => file.document, {
+    cascade: true,
+    eager: true,
+  })
+  attachments: DocumentFile[];
 
   @CreateDateColumn()
   createdAt: Date;
@@ -93,14 +114,25 @@ export class Document {
   updatedAt: Date;
 
   // Métodos
-  canBeApprovedBy(user: any): boolean {
-    return user.role === UserRole.DIRECTOR;
+  canBeApprovedBy(user: User): boolean {
+    return user.role === UserRole.DIRECTOR && this.isPendingApproval();
   }
 
-  canBeEditedBy(user: any): boolean {
+  canBeRejectedBy(user: User): boolean {
+    return user.role === UserRole.DIRECTOR && this.isPendingApproval();
+  }
+
+  canBeEditedBy(user: User): boolean {
     return (
-      this.createdById === user.id ||
-      (user.role === UserRole.DIRECTOR && this.status === DocumentStatus.REJECTED)
+      this.createdBy.id === user.id &&
+      [DocumentStatus.DRAFT, DocumentStatus.REJECTED].includes(this.status)
+    );
+  }
+
+  canBeDeletedBy(user: User): boolean {
+    return (
+      (this.createdBy.id === user.id && this.status === DocumentStatus.DRAFT) ||
+      user.role === UserRole.DIRECTOR
     );
   }
 
@@ -109,6 +141,6 @@ export class Document {
   }
 
   isPendingApproval(): boolean {
-    return this.status === DocumentStatus.PENDING_APPROVAL;
+    return this.status === DocumentStatus.PENDING;
   }
-} 
+}

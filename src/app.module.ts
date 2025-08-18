@@ -7,6 +7,9 @@ import { DocumentFile } from "./entities/document-file.entity";
 import { envs } from "./config/envs";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
+import { DocumentsModule } from "./modules/documents/documents.module";
+import { UsersModule } from "./modules/users/users.module";
+import { PrinterModule } from "./modules/printer/printer.module";
 
 @Module({
   imports: [
@@ -15,9 +18,9 @@ import { AppService } from "./app.service";
       type: "postgres",
       host: envs.DB_HOST || "localhost",
       port: parseInt(envs.DB_PORT) || 5432,
-      username: envs.DB_USERNAME || "postgres",
-      password: envs.DB_PASSWORD || "postgres",
-      database: envs.DB_DATABASE || "andamiaje_db",
+      username: envs.DB_USERNAME || "andamiaje",
+      password: envs.DB_PASSWORD || "andamiaje",
+      database: envs.DB_DATABASE || "andamiaje",
       synchronize: envs.NODE_ENV !== "production",
       logging: envs.DB_LOGGING,
       entities: [User, Document, DocumentFile],
@@ -26,6 +29,9 @@ import { AppService } from "./app.service";
 
     // Módulos de la aplicación
     AuthModule,
+    DocumentsModule,
+    UsersModule,
+    PrinterModule,
   ],
   controllers: [AppController],
   providers: [AppService],

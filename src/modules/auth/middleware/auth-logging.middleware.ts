@@ -18,7 +18,7 @@ export class AuthLoggingMiddleware implements NestMiddleware {
 
     if (user) {
       this.logger.log(
-        `Usuario autenticado: ${user.username} (${user.role}) - ID: ${user.id}`
+        `Usuario autenticado: ${user.id} (${user.role}) - ID: ${user.id}`
       );
     } else {
       this.logger.log("Usuario no autenticado");
@@ -32,7 +32,7 @@ export class AuthLoggingMiddleware implements NestMiddleware {
 
       if (user) {
         this.logger.log(
-          `Respuesta para ${user.username}: ${statusCode} - Tiempo: ${responseTime}ms`
+          `Respuesta para ${user.id}: ${statusCode} - Tiempo: ${responseTime}ms`
         );
       }
 
