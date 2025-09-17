@@ -26,29 +26,33 @@ API para gestión de usuarios y archivos con sistema de roles, construida con Ne
 
 ## 📋 Prerrequisitos
 
-- Node.js 18+ 
+- Node.js 18+
 - PostgreSQL 12+
 - npm o yarn
 
 ## 🚀 Instalación
 
 1. **Clonar el repositorio**
+
 ```bash
 git clone <url-del-repositorio>
 cd andamiaje-api
 ```
 
 2. **Instalar dependencias**
+
 ```bash
 npm install
 ```
 
 3. **Configurar variables de entorno**
+
 ```bash
 cp .env.example .env
 ```
 
 Editar el archivo `.env` con tus configuraciones:
+
 ```env
 # Base de datos
 DB_HOST=localhost
@@ -63,16 +67,19 @@ JWT_REFRESH_SECRET=tu_refresh_secret_super_seguro
 ```
 
 4. **Crear la base de datos**
+
 ```sql
 CREATE DATABASE andamiaje_db;
 ```
 
 5. **Ejecutar migraciones** (opcional en desarrollo)
+
 ```bash
 npm run migration:run
 ```
 
 6. **Iniciar la aplicación**
+
 ```bash
 # Desarrollo
 npm run start:dev
@@ -85,12 +92,14 @@ npm run start:prod
 ## 📚 Endpoints de la API
 
 ### Autenticación
+
 - `POST /api/v1/auth/login` - Iniciar sesión
 - `POST /api/v1/auth/refresh` - Renovar token
 - `GET /api/v1/auth/profile` - Obtener perfil
 - `POST /api/v1/auth/logout` - Cerrar sesión
 
 ### Documentación
+
 - `GET /api/docs` - Documentación Swagger
 
 ## 🔐 Roles y Permisos
@@ -141,13 +150,12 @@ npm run test:cov
 
 ### Variables de Entorno
 
-| Variable | Descripción | Default |
-|----------|-------------|---------|
-| `PORT` | Puerto de la aplicación | 5001 |
-| `DB_HOST` | Host de PostgreSQL | localhost |
-| `DB_PORT` | Puerto de PostgreSQL | 5432 |
-| `JWT_SECRET` | Secreto para JWT | Requerido |
-| `UPLOAD_DEST` | Directorio de uploads | ./uploads |
+| Variable     | Descripción             | Default   |
+| ------------ | ----------------------- | --------- |
+| `PORT`       | Puerto de la aplicación | 5001      |
+| `DB_HOST`    | Host de PostgreSQL      | localhost |
+| `DB_PORT`    | Puerto de PostgreSQL    | 5432      |
+| `JWT_SECRET` | Secreto para JWT        | Requerido |
 
 ### Base de Datos
 
@@ -179,4 +187,4 @@ Este proyecto está bajo la Licencia MIT.
 
 ## 🆘 Soporte
 
-Para soporte técnico o preguntas, contacta al equipo de desarrollo. 
+Para soporte técnico o preguntas, contacta al equipo de desarrollo.

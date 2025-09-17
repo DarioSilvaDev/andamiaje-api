@@ -48,11 +48,8 @@ const envSchema = Joi.object({
   JWT_REFRESH_EXPIRES_IN: Joi.string().default("7d"),
 
   // Configuración de archivos
-  UPLOAD_DEST: Joi.string().default("./uploads"),
   MAX_FILE_SIZE: Joi.number().default(10485760), // 10MB
-  ALLOWED_FILE_TYPES: Joi.string().default(
-    "pdf,doc,docx,xls,xlsx,txt,jpg,jpeg,png"
-  ),
+  ALLOWED_FILE_TYPES: Joi.string().default("pdf,jpg,jpeg,png"),
 
   // Configuración de logging
   LOG_LEVEL: Joi.string()
@@ -106,7 +103,6 @@ export const envs = {
   JWT_REFRESH_EXPIRES_IN: envVars.JWT_REFRESH_EXPIRES_IN,
 
   // Configuración de archivos
-  UPLOAD_DEST: envVars.UPLOAD_DEST,
   MAX_FILE_SIZE: envVars.MAX_FILE_SIZE,
   ALLOWED_FILE_TYPES: envVars.ALLOWED_FILE_TYPES.split(","),
 
