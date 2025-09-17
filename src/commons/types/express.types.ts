@@ -1,5 +1,5 @@
-import { Request } from 'express';
-import { User } from '@/entities/user.entity';
+import type { Request } from "express";
+import { User } from "@/entities/user.entity";
 
 export interface AuthenticatedRequest extends Request {
   user: User;
@@ -9,4 +9,4 @@ export interface AuthenticatedRequest extends Request {
 export interface RequestWithUser extends Request {
   user?: User;
   startTime?: number;
-} 
+}
