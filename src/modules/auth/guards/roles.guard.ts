@@ -1,4 +1,4 @@
-import { UserRole } from "@/commons/constants/roles.constants";
+import { UserRole } from "@/commons/enums";
 import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 

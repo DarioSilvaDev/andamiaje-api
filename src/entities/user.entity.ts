@@ -11,21 +11,24 @@ import {
 import { Exclude } from "class-transformer";
 import * as bcrypt from "bcryptjs";
 import { Document } from "./document.entity";
-import { UserRole } from "@/commons/constants/roles.constants";
+import { AccountStatus, UserRole } from "@/commons/enums";
 
 @Entity("users")
 export class User {
-  @PrimaryGeneratedColumn("uuid")
-  id: string;
+  @PrimaryGeneratedColumn("increment")
+  id: number;
 
-  @Column({ length: 100 })
+  @Column({ name: "first_name", length: 100 })
   firstName: string;
 
-  @Column({ length: 100 })
+  @Column({ name: "last_name", length: 100 })
   lastName: string;
 
   @Column({ unique: true, length: 100 })
   email: string;
+
+  @Column({ unique: true, length: 9, name: "document_number" })
+  documentNumber: string;
 
   @Column({ unique: true, length: 20 })
   phone: string;
@@ -41,23 +44,40 @@ export class User {
   })
   role: UserRole;
 
-  @Column({ default: true })
-  isActive: boolean;
+  @Column({ name: "digital_signature", nullable: true })
+  digitalSignature: string;
+
+  @Column({
+    type: "enum",
+    enum: AccountStatus,
+    default: AccountStatus.PENDING_SIGNATURE,
+    name: "account_status",
+  })
+  accountStatus: AccountStatus;
 
   @Column({ nullable: true })
-  lastLoginAt: Date;
+  specialization?: string;
 
-  @CreateDateColumn()
+  @Column({ nullable: true, name: "license_number" })
+  licenseNumber?: string;
+
+  @Column({ nullable: true, name: "last_login_at" })
+  lastLoginAt?: Date;
+
+  @Column({ nullable: false, name: "first_login", default: true })
+  firstLogin?: boolean;
+
+  @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
 
   // Relaciones
-  @OneToMany("Document", "createdBy")
+  @OneToMany(() => Document, (document) => document.createdBy)
   createdDocuments: Document[];
 
-  @OneToMany("Document", "approvedBy")
+  @OneToMany(() => Document, (document) => document.approvedBy)
   approvedDocuments: Document[];
 
   // Métodos

@@ -1,12 +1,5 @@
-export enum UserRole {
-  DIRECTOR = "director",
-  TERAPEUTA = "terapeuta",
-  ACOMPANIANTE_EXTERNO = "acompaniante_externo",
-  COORDINADOR_ALUMNO = "coordinador_alumno",
-  COORDINADOR_FAMILIA = "coordinador_familia",
-}
+import { UserRole } from "../enums";
 
-// 📌 Grupos de documentos / acciones específicas
 export const DOCUMENT_TYPES = {
   PLAN_TRABAJO: "plan_trabajo",
   INFORME_SEMESTRAL: "informe_semestral",
@@ -72,8 +65,8 @@ export const ROLE_PERMISSIONS = {
     ],
   },
 
-  [UserRole.COORDINADOR_ALUMNO]: {
-    name: "Coordinador (Alumno)",
+  [UserRole.COORDINADOR_UNO]: {
+    name: "Coordinador DOS)",
     description: "Gestiona documentos de alumnos y acomp. externos",
     permissions: [
       `documents:${DOCUMENT_TYPES.PLAN_TRABAJO}:create`,
@@ -95,7 +88,7 @@ export const ROLE_PERMISSIONS = {
     ],
   },
 
-  [UserRole.COORDINADOR_FAMILIA]: {
+  [UserRole.COORDINADOR_DOS]: {
     name: "Coordinador (Familia)",
     description: "Gestiona documentos vinculados a familias",
     permissions: [
@@ -129,8 +122,8 @@ export const ROLE_PERMISSIONS = {
 // 📌 Jerarquía
 export const ROLE_HIERARCHY = {
   [UserRole.DIRECTOR]: 5,
-  [UserRole.COORDINADOR_ALUMNO]: 4,
-  [UserRole.COORDINADOR_FAMILIA]: 4,
+  [UserRole.COORDINADOR_UNO]: 4,
+  [UserRole.COORDINADOR_DOS]: 4,
   [UserRole.TERAPEUTA]: 3,
   [UserRole.ACOMPANIANTE_EXTERNO]: 2,
 };

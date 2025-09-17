@@ -2,7 +2,7 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "../app.module";
 import { UserRepository } from "../repositories/user.repository";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { UserRole } from "@/commons/constants/roles.constants";
+import { AccountStatus, UserRole } from "@/commons/enums";
 
 async function createAdminUser() {
   const app = await NestFactory.createApplicationContext(AppModule);
@@ -27,7 +27,7 @@ async function createAdminUser() {
       email: "admin@andamiaje.com",
       password: "admin123",
       role: UserRole.DIRECTOR,
-      isActive: true,
+      accountStatus: AccountStatus.ACTIVE,
     });
 
     await userRepository.save(adminUser);

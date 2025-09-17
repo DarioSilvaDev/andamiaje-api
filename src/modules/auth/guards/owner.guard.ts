@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { UserRole } from "@/commons/constants/roles.constants";
+import { UserRole } from "@/commons/enums";
 
 export interface OwnerCheck {
   entityName: string;

@@ -4,25 +4,27 @@ import {
   BadRequestException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { InjectRepository } from "@nestjs/typeorm";
 import { UserRepository } from "@/repositories/user.repository";
 import { User } from "@/entities/user.entity";
 import { LoginDto } from "./dto/login.dto";
 import { AuthResponseDto } from "./dto/auth-response.dto";
 import { envs } from "@/config/envs";
+import { RegisterDto } from "./dto/register.dto";
+import { AccountStatus } from "@/commons/enums";
+import { UserValidateDto } from "./dto/user-validated.dto";
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(UserRepository)
+    // @InjectRepository(UserRepository)
     private readonly userRepository: UserRepository,
     private readonly jwtService: JwtService
   ) {}
 
-  async validateUser(username: string, password: string): Promise<User> {
-    const user = await this.userRepository.findByEmail(username);
+  async validateUser(documentNumber: string, password: string): Promise<User> {
+    const user = await this.userRepository.findByDocumentNumber(documentNumber);
 
-    if (!user || !user.isActive) {
+    if (!user) {
       throw new UnauthorizedException("Credenciales inválidas");
     }
 
@@ -31,19 +33,26 @@ export class AuthService {
       throw new UnauthorizedException("Credenciales inválidas");
     }
 
-    // Actualizar último login
-    await this.userRepository.updateLastLogin(user.id);
+    if (user.accountStatus === "DISABLED") {
+      throw new UnauthorizedException("Usuario deshabilitado.");
+    }
 
+    console.log("🚀 ~ AuthService ~ validateUser ~ user:", user);
     return user;
   }
 
   async login(loginDto: LoginDto): Promise<AuthResponseDto> {
-    const user = await this.validateUser(loginDto.username, loginDto.password);
+    const user = await this.validateUser(
+      loginDto.documentNumber,
+      loginDto.password
+    );
 
-    const payload = {
-      sub: user.id,
+    const payload: UserValidateDto = {
+      id: user.id,
       email: user.email,
       role: user.role,
+      accountStatus: user.accountStatus,
+      documentNumber: user.documentNumber,
     };
 
     const accessToken = this.jwtService.sign(payload, {
@@ -55,6 +64,8 @@ export class AuthService {
       secret: envs.JWT_REFRESH_SECRET,
       expiresIn: envs.JWT_REFRESH_EXPIRES_IN,
     });
+
+    await this.userRepository.updateLastLogin(user.id);
 
     // Calcular tiempo de expiración en segundos
     const expiresIn = this.getExpirationTime(envs.JWT_EXPIRES_IN);
@@ -68,7 +79,7 @@ export class AuthService {
         lastName: user.lastName,
         email: user.email,
         role: user.role,
-        isActive: user.isActive,
+        accountStatus: user.accountStatus,
       },
       expiresIn,
     };
@@ -81,7 +92,7 @@ export class AuthService {
       });
 
       const user = await this.userRepository.findOne({
-        where: { id: payload.sub, isActive: true },
+        where: { id: payload.sub, accountStatus: AccountStatus.ACTIVE },
       });
 
       if (!user) {
@@ -92,6 +103,7 @@ export class AuthService {
         sub: user.id,
         email: user.email,
         role: user.role,
+        accountStatus: user.accountStatus,
       };
 
       const newAccessToken = this.jwtService.sign(newPayload, {
@@ -115,7 +127,7 @@ export class AuthService {
           lastName: user.lastName,
           email: user.email,
           role: user.role,
-          isActive: user.isActive,
+          accountStatus: user.accountStatus,
         },
         expiresIn,
       };
@@ -148,5 +160,45 @@ export class AuthService {
       default:
         return 86400; // 24 horas por defecto
     }
+  }
+
+  async logout(userId: number): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new BadRequestException("Usuario no encontrado");
+    }
+
+    // Aquí podrías implementar lógica adicional para manejar el logout, como invalidar tokens
+    // o registrar la acción en un log.
+  }
+
+  async getUserProfile(userId: number): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId, accountStatus: AccountStatus.ACTIVE },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException("Usuario no encontrado o inactivo");
+    }
+
+    return user;
+  }
+
+  async updateLastLogin(userId: number): Promise<void> {
+    await this.userRepository.updateLastLogin(userId);
+  }
+
+  async register(
+    userData: RegisterDto
+    // digitalSignature: Express.Multer.File
+  ): Promise<AuthResponseDto> {
+    const user = this.userRepository.create(userData);
+    // user.digitalSignature = digitalSignature.originalname; //await s3.upload(digitalSignature); // Asumiendo que tienes un servicio S3 para manejar la firma digital
+    const saved = await this.userRepository.save(user);
+    console.log("🚀 ~ AuthService ~ register ~ saved:", saved);
+    return this.login({
+      documentNumber: userData.documentNumber,
+      password: userData.password,
+    });
   }
 }

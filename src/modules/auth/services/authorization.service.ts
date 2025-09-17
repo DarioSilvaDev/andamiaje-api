@@ -4,8 +4,8 @@ import {
   ROLE_HIERARCHY,
   DOCUMENT_TYPES,
   PERMISSION_ACTIONS,
-  UserRole,
-} from "@/commons/constants/roles.constants";
+} from "@/commons/constants";
+import { UserRole } from "@/commons/enums";
 
 @Injectable()
 export class AuthorizationService {
@@ -165,8 +165,8 @@ export class AuthorizationService {
     const allowedScopes: Record<UserRole, string[]> = {
       [UserRole.DIRECTOR]: ["paciente", "alumno", "familia"],
       [UserRole.TERAPEUTA]: ["paciente"],
-      [UserRole.COORDINADOR_ALUMNO]: ["alumno"],
-      [UserRole.COORDINADOR_FAMILIA]: ["familia"],
+      [UserRole.COORDINADOR_UNO]: ["alumno"],
+      [UserRole.COORDINADOR_DOS]: ["familia"],
       [UserRole.ACOMPANIANTE_EXTERNO]: ["alumno"],
     };
     return allowedScopes[userRole]?.includes(scope) ?? false;

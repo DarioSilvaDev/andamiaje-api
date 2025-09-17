@@ -8,6 +8,8 @@ import {
   Get,
   Req,
   Res,
+  UseInterceptors,
+  UploadedFile,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -22,11 +24,55 @@ import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { CurrentUser } from "./decorators/current-user.decorator";
 import { User } from "@/entities/user.entity";
 import { Response } from "express";
+import { RegisterDto } from "./dto/register.dto";
+import { Public } from "./decorators/public.decorator";
 
 @ApiTags("Autenticación")
+@Public()
 @Controller("auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Post("register")
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: "Registrar usuario",
+    description: "Crea un nuevo usuario y retorna tokens JWT",
+  })
+  @ApiResponse({
+    status: 201,
+    description: "Usuario registrado exitosamente",
+    type: AuthResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Error de validación",
+  })
+  async register(
+    @Body()
+    registerDto: RegisterDto,
+    // @UploadedFile() file: Express.Multer.File,
+    @Res({ passthrough: true }) res: Response
+  ): Promise<AuthResponseDto> {
+    const authResponse = await this.authService.register(registerDto);
+
+    // Enviar tokens en cookies httpOnly y secure
+    res.cookie("accessToken", authResponse.accessToken, {
+      httpOnly: true,
+      secure: true, // ⚠️ true si usas HTTPS
+      sameSite: "strict",
+      maxAge: authResponse.expiresIn * 1000,
+    });
+
+    res.cookie("refreshToken", authResponse.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // ejemplo: 7 días
+    });
+
+    return authResponse;
+  }
 
   @Post("login")
   @HttpCode(HttpStatus.NO_CONTENT)

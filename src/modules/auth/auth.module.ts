@@ -13,10 +13,12 @@ import { OwnerGuard } from "./guards/owner.guard";
 import { AuthLoggingInterceptor } from "./interceptors/auth-logging.interceptor";
 import { envs } from "@/config/envs";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
+import { LocalStrategy } from "./strategies/local.strategy";
+import { User } from "@/entities";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserRepository]),
+    TypeOrmModule.forFeature([User]),
     PassportModule,
     JwtModule.register({
       secret: envs.JWT_SECRET,
@@ -27,6 +29,7 @@ import { JwtAuthGuard } from "./guards/jwt-auth.guard";
   providers: [
     AuthService,
     JwtStrategy,
+    LocalStrategy,
     AuthorizationService,
     // Guards
     JwtAuthGuard,
@@ -35,6 +38,8 @@ import { JwtAuthGuard } from "./guards/jwt-auth.guard";
     OwnerGuard,
     // Interceptors
     AuthLoggingInterceptor,
+    // Repositories
+    UserRepository,
   ],
   exports: [
     AuthService,

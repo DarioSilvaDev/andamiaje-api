@@ -13,14 +13,15 @@ export const loggerConfig = WinstonModule.createLogger({
     winston.format.json()
   ),
   defaultMeta: { service: "andamiaje-api" },
-  // transports: [
-  //   // Consola
-  //   new winston.transports.Console({
-  //     format: winston.format.combine(
-  //       winston.format.colorize(),
-  //       winston.format.simple(),
-  //     ),
-  //   }),
+  transports: [
+    // Consola
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      ),
+    }),
+  ],
   //   // Archivo de logs diarios
   //   new DailyRotateFile({
   //     filename: `${envs.LOG_DIR}/application-%DATE%.log`,

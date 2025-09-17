@@ -1,4 +1,4 @@
-import { UserRole } from "@/commons/constants/roles.constants";
+import { AccountStatus, UserRole } from "@/commons/enums";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class AuthResponseDto {
@@ -18,12 +18,12 @@ export class AuthResponseDto {
     description: "Información del usuario autenticado",
   })
   user: {
-    id: string;
+    id: number;
     firstName: string;
     lastName: string;
     email: string;
     role: UserRole;
-    isActive: boolean;
+    accountStatus: AccountStatus;
   };
 
   @ApiProperty({

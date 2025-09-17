@@ -5,6 +5,7 @@ import { AppModule } from "./app.module";
 import { envs } from "./config/envs";
 import { LoggingInterceptor } from "./commons/interceptors/logging.interceptors";
 import { AllExceptionsFilter } from "./commons/filters/all-exceptions.filter";
+import { corsConfig } from "./config/cors.config";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -40,10 +41,7 @@ async function bootstrap() {
     })
   );
 
-  app.enableCors({
-    origin: true,
-    credentials: true,
-  });
+  app.enableCors(corsConfig);
 
   const config = new DocumentBuilder()
     .setTitle("Andamiaje API")

@@ -5,7 +5,7 @@ import { AuthRolesGuard } from "@/modules/auth/guards/auth-roles.guard";
 import { OwnerGuard } from "@/modules/auth/guards/owner.guard";
 import { Roles } from "@/modules/auth/decorators/roles.decorator";
 import { OwnerCheck } from "@/modules/auth/decorators/owner-check.decorator";
-import { UserRole } from "../constants/roles.constants";
+import { UserRole } from "../enums";
 
 @ApiTags("Ejemplo de Autorización")
 @Controller("example")
@@ -22,11 +22,7 @@ export class AuthorizationExampleController {
 
   // Usuarios con rol DIRECTOR o COORDINADOR pueden acceder
   @Get("management")
-  @Roles(
-    UserRole.DIRECTOR,
-    UserRole.COORDINADOR_ALUMNO,
-    UserRole.COORDINADOR_FAMILIA
-  )
+  @Roles(UserRole.DIRECTOR, UserRole.COORDINADOR_UNO, UserRole.COORDINADOR_DOS)
   @ApiOperation({ summary: "Para directores y coordinadores" })
   managementEndpoint() {
     return { message: "Directores y coordinadores pueden ver esto" };
@@ -44,8 +40,8 @@ export class AuthorizationExampleController {
   @Roles(
     UserRole.TERAPEUTA,
     UserRole.ACOMPANIANTE_EXTERNO,
-    UserRole.COORDINADOR_ALUMNO,
-    UserRole.COORDINADOR_FAMILIA
+    UserRole.COORDINADOR_UNO,
+    UserRole.COORDINADOR_DOS
   )
   @UseGuards(OwnerGuard)
   @OwnerCheck({

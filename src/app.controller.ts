@@ -1,6 +1,6 @@
 import { Controller, Get, Res } from "@nestjs/common";
 import { AppService } from "./app.service";
-import { getActasPdfReport } from "./modules/pdfReports/actas.pdf.report";
+import { buildActa } from "./modules/pdfReports/actas.pdf.builder";
 import { Response } from "express";
 import { PrinterService } from "./modules/printer/printer.service";
 
@@ -13,8 +13,23 @@ export class AppController {
 
   @Get("status")
   getStatus(@Res() response: Response) {
-    const acta = getActasPdfReport();
+    const acta = buildActa({}, {});
     // Ensure the PDF template is loaded
+    /*
+    let builder;
+    switch (tipo) {
+      case "ACTA":
+        builder= buildActa(payload, configFromDB);
+        break;
+      case "INFORME":
+        builder= buildInformeSemanal(payload, configFromDB);
+        break;
+      case "PLAN":
+        builder= buildPlan(payload, configFromDB);
+        break;
+      }
+    const doc = this.printerService.createPdf(builder);
+    */
     const doc = this.printerService.createPdf(acta);
     response.setHeader("Content-Type", "application/pdf");
     doc.info.Title = "Hola-Mundo";
