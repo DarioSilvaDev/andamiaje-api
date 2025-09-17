@@ -3,7 +3,6 @@ import { User } from "@/entities/user.entity";
 import { UserRepository } from "@/repositories/user.repository";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
-import { AccountStatus } from "@/commons/enums";
 
 @Injectable()
 export class UsersService {
@@ -27,16 +26,16 @@ export class UsersService {
     return;
   }
 
-  async uploadDigitalSignature(
-    user: User,
-    digitalSignature: Express.Multer.File
-  ): Promise<AccountStatus> {
-    const response = await this.usersRepository.update(user.id, {
-      digitalSignature: digitalSignature.path,
-      accountStatus: AccountStatus.ACTIVE,
-    });
-    return response.affected ? AccountStatus.ACTIVE : user.accountStatus;
-  }
+  // async uploadDigitalSignature(
+  //   user: User,
+  //   digitalSignature: Express.Multer.File
+  // ): Promise<AccountStatus> {
+  //   const response = await this.usersRepository.update(user.id, {
+  //     digitalSignature: digitalSignature.path,
+  //     accountStatus: AccountStatus.ACTIVE,
+  //   });
+  //   return response.affected ? AccountStatus.ACTIVE : user.accountStatus;
+  // }
 
   remove(id: number): Promise<void> {
     return this.usersRepository.deactivateUser(id);

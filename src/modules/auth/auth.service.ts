@@ -188,12 +188,8 @@ export class AuthService {
     await this.userRepository.updateLastLogin(userId);
   }
 
-  async register(
-    userData: RegisterDto
-    // digitalSignature: Express.Multer.File
-  ): Promise<AuthResponseDto> {
+  async register(userData: RegisterDto): Promise<AuthResponseDto> {
     const user = this.userRepository.create(userData);
-    // user.digitalSignature = digitalSignature.originalname; //await s3.upload(digitalSignature); // Asumiendo que tienes un servicio S3 para manejar la firma digital
     const saved = await this.userRepository.save(user);
     console.log("🚀 ~ AuthService ~ register ~ saved:", saved);
     return this.login({

@@ -7,9 +7,9 @@ import {
   UseInterceptors,
   UploadedFile,
   Query,
-  BadRequestException,
   ForbiddenException,
 } from "@nestjs/common";
+import { Express } from "express";
 import { StorageService } from "./storage.service";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { CurrentUser } from "../auth";
