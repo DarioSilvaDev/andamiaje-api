@@ -4,9 +4,10 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { envs } from "@/config/envs";
 import { User } from "@/entities";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import type { Express } from "express"; // import explícito
 
 @Injectable()
 export class StorageService {

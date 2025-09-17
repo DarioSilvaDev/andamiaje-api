@@ -9,12 +9,12 @@ import {
   Query,
   ForbiddenException,
 } from "@nestjs/common";
-import { Express } from "express";
-import { StorageService } from "./storage.service";
 import { FileInterceptor } from "@nestjs/platform-express";
+import { StorageService } from "./storage.service";
 import { CurrentUser } from "../auth";
 import { User } from "@/entities";
 import { AccountStatus } from "@/commons/enums";
+import type { Express } from "express"; // import explícito
 
 @Controller("storage")
 export class StorageController {
