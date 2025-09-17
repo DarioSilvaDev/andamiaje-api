@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
     "module": "commonjs",
+    "types": ["node", "express", "multer"],
+    "typeRoots": ["./node_modules/@types"],
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
@@ -26,5 +28,6 @@
       "@/repositories/*": ["src/repositories/*"],
       "@/commons/*": ["src/commons/*"]
     }
-  }
+  },
+  "include":["src"]  
 } 
