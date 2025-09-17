@@ -51,7 +51,6 @@ export class AuthController {
   async register(
     @Body()
     registerDto: RegisterDto,
-    // @UploadedFile() file: Express.Multer.File,
     @Res({ passthrough: true }) res: Response
   ): Promise<AuthResponseDto> {
     const authResponse = await this.authService.register(registerDto);
