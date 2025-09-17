@@ -1,6 +1,6 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "../app.module";
-import { UserRepository } from "../repositories/user.repository";
+import { UserRepository } from "@/repositories/user.repository";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { AccountStatus, UserRole } from "@/commons/enums";
 
