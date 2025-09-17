@@ -9,7 +9,7 @@ export const corsConfig: CorsOptions = {
 
     if (isProd) {
       // ✅ Solo permitir tu dominio en producción
-      if (origin && allowedOriginsProd.includes(origin)) {
+      if (!origin && allowedOriginsProd.includes(origin)) {
         return callback(null, true);
       }
       return callback(new Error("Not allowed by CORS"), false);
