@@ -6,9 +6,12 @@ import { AdmissionFormDto } from "./create-admission-form.dto";
 import { PlanFormDto } from "./create-plan-form.dto";
 import { SemestralReportDto } from "./create-semestral-report.dto";
 import { ActaFormDto } from "./create-actas-form.dto";
+import { SpecificDataType } from "./specific-data.dto";
 
 export class CreateFormDto {
-  @IsEnum(FORMTYPE)
+  @IsEnum(FORMTYPE, {
+    message: "El campo 'type' debe ser un tipo de formulario válido",
+  })
   type: FORMTYPE;
 
   @ValidateNested()
@@ -17,11 +20,18 @@ export class CreateFormDto {
   baseData: BaseFormDto;
 
   @ValidateNested()
-  @Type(() => Object)
+  @Type((options) => {
+    const object = options?.newObject || {};
+    return SpecificFormDtoMap[object.type] || Object;
+  })
   @IsNotEmptyObject()
-  specificData:
-    | AdmissionFormDto
-    | PlanFormDto
-    | SemestralReportDto
-    | ActaFormDto;
+  @SpecificDataType()
+  specificData: any;
 }
+
+export const SpecificFormDtoMap = {
+  [FORMTYPE.ACTAS]: ActaFormDto,
+  [FORMTYPE.INFORME_ADMISION]: AdmissionFormDto,
+  [FORMTYPE.PLAN_TRABAJO]: PlanFormDto,
+  [FORMTYPE.INFORME_SEMESTRAL]: SemestralReportDto,
+};

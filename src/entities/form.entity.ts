@@ -21,7 +21,7 @@ export class FormEntity {
   @Column({ nullable: true })
   patient?: string;
 
-  @Column({ unique: true, length: 9, name: "document_number" })
+  @Column({ length: 9, name: "document_number" })
   documentNumber: string;
 
   @Column({ nullable: true, type: "int" })
@@ -36,7 +36,7 @@ export class FormEntity {
   @Column({ type: "date" })
   fecha: Date;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { eager: true })
   @JoinColumn({ name: "created_by" })
   createdBy: User;
 

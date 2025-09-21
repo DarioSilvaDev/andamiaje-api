@@ -13,7 +13,7 @@ export class ActaForm {
   @PrimaryGeneratedColumn("increment")
   id: number;
 
-  @ManyToOne(() => FormEntity, { onDelete: "CASCADE" })
+  @ManyToOne(() => FormEntity, { onDelete: "CASCADE", eager: true })
   @JoinColumn({ name: "form_id" })
   form: FormEntity;
 

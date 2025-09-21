@@ -51,4 +51,24 @@ export class FormsService {
         throw new Error(`Unsupported form type: ${type}`);
     }
   }
+
+  async getPendings() {
+    return this.actaRepository.find({
+      relations: ["form", "form.createdBy"],
+      select: {
+        form: {
+          createdBy: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+            accountStatus: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
+    });
+  }
 }

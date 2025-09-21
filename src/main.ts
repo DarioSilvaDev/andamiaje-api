@@ -28,15 +28,18 @@ async function bootstrap() {
         enableImplicitConversion: true,
       },
       exceptionFactory: (errors) => {
-        const messages = errors
-          .map((err) => {
-            if (err.constraints) {
-              return Object.values(err.constraints);
-            }
-            return [];
-          })
-          .flat();
-        return new BadRequestException(...messages);
+        const formatErrors = (validationErrors) => {
+          return validationErrors.map((err) => ({
+            field: err.property,
+            errors: Object.values(err.constraints || {}),
+            children: err.children ? formatErrors(err.children) : [],
+          }));
+        };
+
+        return new BadRequestException({
+          message: "La validación del formulario ha fallado",
+          errors: formatErrors(errors),
+        });
       },
     })
   );

@@ -10,33 +10,16 @@ export class FormsController {
 
   @Post()
   async create(@Body() body: CreateFormDto, @CurrentUser() user: User) {
-    console.log("🚀 ~ FormsController ~ create ~ user:", user);
     return this.formsService.create(
       body.type,
-      { ...body.baseData, createBy: user },
+      { ...body.baseData, createdBy: user },
       body.specificData
     );
   }
 
-  @Get("/?status=pending")
-  async getPendingForms(@Query("status") status: string) {
-    // Aquí iría la lógica para obtener los formularios pendientes
-    /*
-    [
-      {
-        "id": 1,
-        "type": "ADMISSION",
-        "patient": "Juan Pérez",
-        "dni": "12345678",
-        "createdBy": {
-          "id": 5,
-          "fullName": "Ana López"
-        },
-        "createdAt": "2025-09-13T15:00:00Z"
-      }
-    ]
-
-     */
+  @Get()
+  async getPendingForms() {
+    return this.formsService.getPendings();
   }
 
   /*

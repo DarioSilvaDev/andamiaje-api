@@ -27,11 +27,32 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const responseBody = {
+    // const responseBody = {
+    //   statusCode: httpStatus,
+    //   timestamp: new Date().toISOString(),
+    //   path: httpAdapter.getRequestUrl(request),
+    //   message: `${exception instanceof Error ? exception.message : "Unknown error"}`,
+    // };
+    let responseBody: any;
+
+    if (exception instanceof HttpException) {
+      const exceptionResponse = exception.getResponse();
+      responseBody =
+        typeof exceptionResponse === "string"
+          ? { message: exceptionResponse }
+          : exceptionResponse; // <-- Aquí respetamos el objeto completo de la excepción
+    } else {
+      responseBody = {
+        message:
+          exception instanceof Error ? exception.message : "Unknown error",
+      };
+    }
+
+    responseBody = {
       statusCode: httpStatus,
       timestamp: new Date().toISOString(),
       path: httpAdapter.getRequestUrl(request),
-      message: `${exception instanceof Error ? exception.message : "Unknown error"}`,
+      ...responseBody, // <-- combinamos con los datos anteriores
     };
 
     this.logger.error(
