@@ -5,11 +5,11 @@ export enum AccountStatus {
 }
 
 export enum UserRole {
-  DIRECTOR = "director",
-  TERAPEUTA = "terapeuta",
-  ACOMPANIANTE_EXTERNO = "acompaniante_externo",
-  COORDINADOR_UNO = "coordinador_uno",
-  COORDINADOR_DOS = "coordinador_dos",
+  DIRECTOR = "DIRECTOR",
+  TERAPEUTA = "TERAPEUTA",
+  ACOMPANIANTE_EXTERNO = "ACOMPANIANTE_EXTERNO",
+  COORDINADOR_UNO = "COORDINADOR_UNO",
+  COORDINADOR_DOS = "COORDINADOR_DOS",
 }
 
 export enum MODALITY_ENUM {
@@ -29,24 +29,24 @@ export enum FORMTYPE {
 }
 
 export enum DocumentStatus {
-  DRAFT = "draft",
-  PENDING = "pending",
-  APPROVED = "approved",
-  REJECTED = "rejected",
+  DRAFT = "DRAFT",
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
 }
 
 export enum DocumentScope {
-  PACIENTE = "paciente",
-  ALUMNO = "alumno",
-  FAMILIA = "familia",
+  PACIENTE = "PACIENTE",
+  ALUMNO = "ALUMNO",
+  FAMILIA = "FAMILIA",
 }
 
 export enum DocumentType {
-  PLAN_TRABAJO = "plan_trabajo",
-  INFORME_SEMESTRAL = "informe_semestral",
-  ACTAS = "actas",
-  REPORTE_MENSUAL = "reporte_mensual",
-  SEGUIMIENTO_ACOMPANANTE = "seguimiento_acompaniante_externo",
-  SEGUIMIENTO_FAMILIA = "seguimiento_familia",
-  FACTURA = "factura",
+  PLAN_TRABAJO = "PLAN_TRABAJO",
+  INFORME_SEMESTRAL = "INFORME_SEMESTRAL",
+  ACTAS = "ACTAS",
+  REPORTE_MENSUAL = "REPORTE_MENSUAL",
+  SEGUIMIENTO_ACOMPANANTE = "SEGUIMIENTO_ACOMPANIANTE_EXTERNO",
+  SEGUIMIENTO_FAMILIA = "SEGUIMIENTO_FAMILIA",
+  FACTURA = "FACTURA",
 }
