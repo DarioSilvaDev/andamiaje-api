@@ -6,4 +6,6 @@ export class UserValidateDto {
   accountStatus: AccountStatus;
   email: string;
   role: UserRole;
+  firstLogin: boolean;
+  hasSignature: boolean;
 }

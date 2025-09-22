@@ -53,6 +53,8 @@ export class AuthService {
       role: user.role,
       accountStatus: user.accountStatus,
       documentNumber: user.documentNumber,
+      firstLogin: user.firstLogin,
+      hasSignature: !!user.digitalSignature,
     };
 
     const accessToken = this.jwtService.sign(payload, {
