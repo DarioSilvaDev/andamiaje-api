@@ -28,11 +28,11 @@ import { RegisterDto } from "./dto/register.dto";
 import { Public } from "./decorators/public.decorator";
 
 @ApiTags("Autenticación")
-@Public()
 @Controller("auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post("register")
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
@@ -73,6 +73,7 @@ export class AuthController {
     return authResponse;
   }
 
+  @Public()
   @Post("login")
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
