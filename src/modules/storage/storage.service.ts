@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  ServiceUnavailableException,
+} from "@nestjs/common";
 import {
   GetObjectCommand,
   PutObjectCommand,
@@ -7,7 +11,9 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { envs } from "@/config/envs";
 import { User } from "@/entities";
-import type { Express } from "express"; // import explícito
+import type { Express } from "express";
+import { UserRepository } from "@/repositories";
+import { AccountStatus } from "@/commons/enums";
 
 @Injectable()
 export class StorageService {
@@ -20,7 +26,7 @@ export class StorageService {
     "image/jpeg", // firma digital
   ];
 
-  constructor() {
+  constructor(private readonly userRepository: UserRepository) {
     this.s3 = new S3Client({
       region: envs.B2_REGION,
       endpoint: `https://${envs.B2_ENDPOINT}`,
@@ -31,7 +37,11 @@ export class StorageService {
     });
   }
 
-  async uploadFile(file: Express.Multer.File, type: string, user: User) {
+  async uploadFile(
+    file: Express.Multer.File,
+    type: string,
+    user: User
+  ): Promise<string> {
     if (!this.allowedMimeTypes.includes(file.mimetype)) {
       throw new BadRequestException("Tipo de archivo no permitido");
     }
@@ -50,13 +60,23 @@ export class StorageService {
       Body: file.buffer,
       ContentType: file.mimetype,
     });
-
-    await this.s3.send(command);
-
-    return {
-      key,
-      url: `https://${this.bucket}.${envs.B2_ENDPOINT}/${key}`,
-    };
+    try {
+      const { $metadata } = await this.s3.send(command);
+      console.log("🚀 ~ StorageService ~ uploadFile ~ $metadata:", $metadata);
+    } catch (error) {
+      console.error("🚀 ~ StorageService ~ uploadFile:", error);
+      throw new ServiceUnavailableException(
+        "No fue posible subir el documento"
+      );
+    }
+    if (type == "FIRMA_DIGITAL") {
+      await this.userRepository.updateUser(user.id, {
+        accountStatus: AccountStatus.ACTIVE,
+        firstLogin: false,
+        digitalSignature: key,
+      });
+    }
+    return key;
   }
 
   // Mapeo de tipos a carpetas

@@ -14,7 +14,7 @@ import { StorageService } from "./storage.service";
 import { CurrentUser } from "../auth";
 import { User } from "@/entities";
 import { AccountStatus } from "@/commons/enums";
-import type { Express } from "express"; // import explícito
+import { Express } from "express"; // import explícito
 
 @Controller("storage")
 export class StorageController {
@@ -27,10 +27,14 @@ export class StorageController {
     @UploadedFile() file: Express.Multer.File,
     @Query("type") type: string
   ) {
-    if (user.accountStatus !== AccountStatus.ACTIVE) {
-      throw new ForbiddenException("No podes cargar docu papu");
+    if (
+      type !== "FIRMA_DIGITAL" &&
+      user.accountStatus !== AccountStatus.ACTIVE
+    ) {
+      throw new ForbiddenException("Solo es posible cargar la firma digital.");
     }
-    return this.storageService.uploadFile(file, type, user);
+    const key = await this.storageService.uploadFile(file, type, user);
+    return { message: "Archivo cargado correctamente.", key };
   }
 
   @Get("download")

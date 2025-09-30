@@ -55,7 +55,10 @@ export class UserRepository extends Repository<User> {
   }
 
   async activateUser(userId: number): Promise<void> {
-    await this.update(userId, { accountStatus: AccountStatus.DISABLED });
+    await this.update(userId, {
+      accountStatus: AccountStatus.ACTIVE,
+      firstLogin: false,
+    });
   }
 
   async findAll(): Promise<User[]> {
@@ -68,7 +71,7 @@ export class UserRepository extends Repository<User> {
 
   async updateUser(id: number, updateUserDto: Partial<User>): Promise<User> {
     await this.update(id, updateUserDto);
-    return this.findOneById(id);
+    return this.findOneWithOptionalPassword({ id }, false);
   }
 
   async removeUser(id: number): Promise<void> {
