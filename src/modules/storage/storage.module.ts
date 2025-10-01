@@ -2,10 +2,10 @@ import { Module } from "@nestjs/common";
 import { StorageService } from "./storage.service";
 import { StorageController } from "./storage.controller";
 import { UserRepository } from "@/repositories";
+import { JwtAuthGuard } from "../auth";
 
 @Module({
-  // imports: [TypeOrmModule.forFeature([User])],
   controllers: [StorageController],
-  providers: [StorageService, UserRepository],
+  providers: [StorageService, UserRepository, JwtAuthGuard],
 })
 export class StorageModule {}

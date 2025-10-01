@@ -31,10 +31,10 @@ export class StorageController {
       type !== "FIRMA_DIGITAL" &&
       user.accountStatus !== AccountStatus.ACTIVE
     ) {
-      throw new ForbiddenException("Solo es posible cargar la firma digital.");
+      throw new ForbiddenException("Solo es posible la carga de firma digital");
     }
     const key = await this.storageService.uploadFile(file, type, user);
-    return { message: "Archivo cargado correctamente.", key };
+    return { message: "Archivo cargado correctamente", key };
   }
 
   @Get("download")
