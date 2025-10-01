@@ -8,10 +8,11 @@ import { UserValidateDto } from "../dto/user-validated.dto";
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req) => req?.cookies?.accessToken,
+      ]),
       ignoreExpiration: false,
       secretOrKey: envs.JWT_SECRET,
-      field: "documentNumber",
     });
   }
 
@@ -24,6 +25,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       role: payload.role,
       firstLogin: payload.firstLogin,
       hasSignature: payload.hasSignature,
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+      phone: payload.phone,
     };
   }
 }

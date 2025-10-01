@@ -1,6 +1,7 @@
 import { HttpAdapterHost, NestFactory } from "@nestjs/core";
 import { BadRequestException, Logger, ValidationPipe } from "@nestjs/common";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
+import cookieParser from "cookie-parser";
 import { AppModule } from "./app.module";
 import { envs } from "./config/envs";
 import { LoggingInterceptor } from "./commons/interceptors/logging.interceptors";
@@ -46,6 +47,7 @@ async function bootstrap() {
 
   app.enableCors(corsConfig);
 
+  app.use(cookieParser());
   const config = new DocumentBuilder()
     .setTitle("Andamiaje API")
     .setDescription(
