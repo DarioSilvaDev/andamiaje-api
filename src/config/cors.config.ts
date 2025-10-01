@@ -1,8 +1,7 @@
 import { CorsOptions } from "@nestjs/common/interfaces/external/cors-options.interface";
 import { envs } from "./envs";
 
-const allowedOriginsProd = [envs.ALLOWEDORIGINSPROD]; // Define tus dominios permitidos en producción
-
+const allowedOriginsProd = envs.ALLOWEDORIGINSPROD.split(",");
 export const corsConfig: CorsOptions = {
   origin: (origin, callback) => {
     const isProd = process.env.NODE_ENV === "production";
