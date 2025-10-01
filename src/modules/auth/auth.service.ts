@@ -55,6 +55,9 @@ export class AuthService {
       documentNumber: user.documentNumber,
       firstLogin: user.firstLogin,
       hasSignature: !!user.digitalSignature,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: user.phone,
     };
 
     const accessToken = this.jwtService.sign(payload, {
@@ -102,10 +105,16 @@ export class AuthService {
       }
 
       const newPayload = {
-        sub: user.id,
+        id: user.id,
         email: user.email,
         role: user.role,
         accountStatus: user.accountStatus,
+        documentNumber: user.documentNumber,
+        firstLogin: user.firstLogin,
+        hasSignature: !!user.digitalSignature,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone,
       };
 
       const newAccessToken = this.jwtService.sign(newPayload, {
