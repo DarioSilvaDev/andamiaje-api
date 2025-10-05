@@ -9,7 +9,12 @@ export function setAuthCookies(
   res: Response,
   tokens: { accessToken: string; refreshToken: string; expiresIn: number }
 ) {
-  const isFrontLocal = process.env.ALLOWEDORIGINSPROD?.includes("localhost");
+  console.log(
+    "🚀 ~ setAuthCookies ~ res.req.headers.origin:",
+    res.req.headers.origin
+  );
+  const origin = res.req.headers.origin as string;
+  const isFrontLocal = origin?.includes("localhost");
 
   const cookieOptionsBase = {
     httpOnly: true,

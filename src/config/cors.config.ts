@@ -16,7 +16,7 @@ export const corsConfig: CorsOptions = {
     );
 
     if (isProd && isAllowed) return callback(null, true);
-    if (!origin && origin?.startsWith("http://localhost"))
+    if (!origin || origin?.startsWith("http://localhost"))
       return callback(null, true);
 
     return callback(new Error("Not allowed by CORS"), false);
