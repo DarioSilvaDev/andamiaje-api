@@ -9,17 +9,13 @@ export function setAuthCookies(
   res: Response,
   tokens: { accessToken: string; refreshToken: string; expiresIn: number }
 ) {
-  console.log(
-    "🚀 ~ setAuthCookies ~ res.req.headers.origin:",
-    res.req.headers.origin
-  );
-  const origin = res.req.headers.origin as string;
-  const isFrontLocal = origin?.includes("localhost");
+  // const origin = res.req.headers.origin as string;
+  // const isFrontLocal = origin?.includes("localhost");
 
   const cookieOptionsBase = {
     httpOnly: true,
-    sameSite: isFrontLocal ? "lax" : "none",
-    secure: !isFrontLocal,
+    sameSite: "lax",
+    secure: false,
   } as const;
 
   // Access Token cookie
@@ -40,12 +36,12 @@ export function setAuthCookies(
  */
 export function clearAuthCookies(res: Response) {
   // const isProd = process.env.NODE_ENV === "production";
-  const isFrontLocal = process.env.ALLOWEDORIGINSPROD?.includes("localhost");
+  // const isFrontLocal = process.env.ALLOWEDORIGINSPROD?.includes("localhost");
 
   const clearOptions = {
     httpOnly: true,
-    sameSite: isFrontLocal ? "lax" : "none",
-    secure: !isFrontLocal,
+    sameSite: "lax",
+    secure: false,
   } as const;
 
   res.clearCookie("accessToken", clearOptions);

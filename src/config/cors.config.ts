@@ -3,19 +3,19 @@ import { envs } from "./envs";
 
 // const allowedOriginsProd = envs.ALLOWEDORIGINSPROD.split(",");
 console.log("🚀 ~ envs.ALLOWEDORIGINSPROD:", envs.ALLOWEDORIGINSPROD);
-const allowedOriginsProd = envs.ALLOWEDORIGINSPROD.split(",").map((o: string) =>
-  o.trim()
-);
+// const allowedOriginsProd = envs.ALLOWEDORIGINSPROD.split(",").map((o: string) =>
+//   o.trim()
+// );
 export const corsConfig: CorsOptions = {
   origin: (origin, callback) => {
-    const isProd = process.env.NODE_ENV === "production";
-    const isAllowed = !origin || allowedOriginsProd.includes(origin);
+    // const isProd = process.env.NODE_ENV === "production";
+    // const isAllowed = !origin || allowedOriginsProd.includes(origin);
 
-    console.log(
-      `🌐 [CORS] Origin: ${origin} | isProd: ${isProd} | Allowed: ${isAllowed}`
-    );
+    // console.log(
+    //   `🌐 [CORS] Origin: ${origin} | isProd: ${isProd} | Allowed: ${isAllowed}`
+    // );
 
-    if (isProd && isAllowed) return callback(null, true);
+    // if (isProd && isAllowed) return callback(null, true);
     if (!origin || origin?.startsWith("http://localhost"))
       return callback(null, true);
 
