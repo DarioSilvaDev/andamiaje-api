@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   ServiceUnavailableException,
 } from "@nestjs/common";
 import {
@@ -19,7 +20,7 @@ import { AccountStatus } from "@/commons/enums";
 export class StorageService {
   private s3: S3Client;
   private bucket = envs.B2_BUCKET;
-
+  private logger = new Logger(StorageService.name);
   private allowedMimeTypes = [
     "application/pdf", // documentos
     "image/png", // firma digital
@@ -61,10 +62,12 @@ export class StorageService {
       ContentType: file.mimetype,
     });
     try {
-      const { $metadata } = await this.s3.send(command);
-      console.log("🚀 ~ StorageService ~ uploadFile ~ $metadata:", $metadata);
+      await this.s3.send(command);
+      this.logger.log(
+        `Archivo ${file.originalname} cargado correctamente en ${folder}`
+      );
     } catch (error) {
-      console.error("🚀 ~ StorageService ~ uploadFile:", error);
+      this.logger.error(error);
       throw new ServiceUnavailableException(
         "No fue posible subir el documento"
       );
