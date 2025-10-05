@@ -59,14 +59,14 @@ export class AuthController {
     res.cookie("accessToken", authResponse.accessToken, {
       httpOnly: true,
       secure: true, // ⚠️ true si usas HTTPS
-      sameSite: "strict",
+      sameSite: "none",
       maxAge: authResponse.expiresIn * 1000,
     });
 
     res.cookie("refreshToken", authResponse.refreshToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "strict",
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000, // ejemplo: 7 días
     });
 
