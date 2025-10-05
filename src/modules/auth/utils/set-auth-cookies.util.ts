@@ -2,7 +2,7 @@ import { Response } from "express";
 
 /**
  * Configura cookies de autenticación (access y refresh) según el entorno.
- * - En local: no usa `secure` y aplica SameSite "lax" (permite HTTP).
+ * - En local: no usa `secure` y aplica SameSite "none" (permite HTTP).
  * - En producción: usa `secure` y SameSite "none" (requerido para HTTPS cross-domain).
  */
 export function setAuthCookies(
@@ -14,8 +14,8 @@ export function setAuthCookies(
 
   const cookieOptionsBase = {
     httpOnly: true,
-    sameSite: "lax",
-    secure: false,
+    sameSite: "none",
+    secure: true,
   } as const;
 
   // Access Token cookie
@@ -40,8 +40,8 @@ export function clearAuthCookies(res: Response) {
 
   const clearOptions = {
     httpOnly: true,
-    sameSite: "lax",
-    secure: false,
+    sameSite: "none",
+    secure: true,
   } as const;
 
   res.clearCookie("accessToken", clearOptions);
