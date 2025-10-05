@@ -26,6 +26,10 @@ import { User } from "@/entities/user.entity";
 import { Response } from "express";
 import { RegisterDto } from "./dto/register.dto";
 import { Public } from "./decorators/public.decorator";
+import {
+  clearAuthCookies,
+  setAuthCookies,
+} from "./utils/set-auth-cookies.util";
 
 @ApiTags("Autenticación")
 @Controller("auth")
@@ -55,21 +59,7 @@ export class AuthController {
   ): Promise<AuthResponseDto> {
     const authResponse = await this.authService.register(registerDto);
 
-    // Enviar tokens en cookies httpOnly y secure
-    res.cookie("accessToken", authResponse.accessToken, {
-      httpOnly: true,
-      secure: true, // ⚠️ true si usas HTTPS
-      sameSite: "none",
-      maxAge: authResponse.expiresIn * 1000,
-    });
-
-    res.cookie("refreshToken", authResponse.refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // ejemplo: 7 días
-    });
-
+    setAuthCookies(res, authResponse);
     return authResponse;
   }
 
@@ -94,20 +84,7 @@ export class AuthController {
   ) {
     const authResponse = await this.authService.login(loginDto);
 
-    // Enviar tokens en cookies httpOnly y secure
-    res.cookie("accessToken", authResponse.accessToken, {
-      httpOnly: true,
-      secure: true, // ⚠️ true si usas HTTPS
-      sameSite: "none",
-      maxAge: authResponse.expiresIn * 1000,
-    });
-
-    res.cookie("refreshToken", authResponse.refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // ejemplo: 7 días
-    });
+    setAuthCookies(res, authResponse);
   }
 
   @Post("refresh")
@@ -154,7 +131,7 @@ export class AuthController {
   @Post("logout")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: "Cerrar sesión",
     description:
@@ -164,8 +141,8 @@ export class AuthController {
     status: 200,
     description: "Logout exitoso",
   })
-  async logout(): Promise<{ message: string }> {
+  async logout(@Res({ passthrough: true }) res: Response) {
     // En una implementación real, podrías agregar el token a una lista negra
-    return { message: "Logout exitoso" };
+    clearAuthCookies(res);
   }
 }

@@ -1,45 +1,13 @@
-import { Controller, Get, Res } from "@nestjs/common";
-import { AppService } from "./app.service";
-// import { buildActa } from "./modules/pdfReports/actas.pdf.builder";
-import { Response } from "express";
-import { PrinterService } from "./modules/printer/printer.service";
-
+import { Controller, Get } from "@nestjs/common";
 @Controller()
 export class AppController {
-  constructor(
-    private readonly appService: AppService,
-    private readonly printerService: PrinterService
-  ) {}
-
   @Get()
-  getStatus(@Res() response: Response) {
-    return response.status(200).send("ONLINE");
+  getRoot() {
+    return {
+      status: "ONLINE",
+      version: process.env.NPM_PACKAGE_VERSION,
+      env: process.env.NODE_ENV,
+      timestamp: new Date().toISOString(),
+    };
   }
-
-  // @Get("status")
-  // getStatus(@Res() response: Response) {
-  //   const acta = buildActa({}, {});
-  //   // Ensure the PDF template is loaded
-  //   /*
-  //   let builder;
-  //   switch (tipo) {
-  //     case "ACTA":
-  //       builder= buildActa(payload, configFromDB);
-  //       break;
-  //     case "INFORME":
-  //       builder= buildInformeSemanal(payload, configFromDB);
-  //       break;
-  //     case "PLAN":
-  //       builder= buildPlan(payload, configFromDB);
-  //       break;
-  //     }
-  //   const doc = this.printerService.createPdf(builder);
-  //   */
-  //   const doc = this.printerService.createPdf(acta);
-  //   response.setHeader("Content-Type", "application/pdf");
-  //   doc.info.Title = "Hola-Mundo";
-  //   doc.pipe(response);
-  //   doc.end();
-  //   return acta; //this.appService.getStatus();
-  // }
 }
