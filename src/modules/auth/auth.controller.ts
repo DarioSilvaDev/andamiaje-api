@@ -4,12 +4,8 @@ import {
   Body,
   HttpCode,
   HttpStatus,
-  UseGuards,
   Get,
-  Req,
   Res,
-  UseInterceptors,
-  UploadedFile,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -87,6 +83,7 @@ export class AuthController {
     setAuthCookies(res, authResponse);
   }
 
+  @Public()
   @Post("refresh")
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -103,13 +100,15 @@ export class AuthController {
     description: "Token de refresco inválido",
   })
   async refreshToken(
-    @Body("refreshToken") refreshToken: string
+    @Body("refreshToken") refreshToken: string,
+    @Res({ passthrough: true }) res: Response
   ): Promise<AuthResponseDto> {
-    return this.authService.refreshToken(refreshToken);
+    const authResponse = await this.authService.refreshToken(refreshToken);
+    setAuthCookies(res, authResponse);
+    return authResponse;
   }
 
   @Get("profile")
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: "Obtener perfil del usuario",
@@ -129,7 +128,6 @@ export class AuthController {
   }
 
   @Post("logout")
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
@@ -138,7 +136,7 @@ export class AuthController {
       "Invalida el token del usuario (implementación del lado del cliente)",
   })
   @ApiResponse({
-    status: 200,
+    status: 204,
     description: "Logout exitoso",
   })
   async logout(@Res({ passthrough: true }) res: Response) {
