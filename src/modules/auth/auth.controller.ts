@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Get,
   Res,
+  UseGuards,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -16,7 +17,6 @@ import {
 import { AuthService } from "./auth.service";
 import { LoginDto } from "./dto/login.dto";
 import { AuthResponseDto } from "./dto/auth-response.dto";
-import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { CurrentUser } from "./decorators/current-user.decorator";
 import { User } from "@/entities/user.entity";
 import { Response } from "express";
@@ -26,6 +26,11 @@ import {
   clearAuthCookies,
   setAuthCookies,
 } from "./utils/set-auth-cookies.util";
+import {
+  RateLimitGuard,
+  AuthRateLimit,
+  StrictRateLimit,
+} from "./guards/rate-limit.guard";
 
 @ApiTags("Autenticación")
 @Controller("auth")
@@ -35,6 +40,8 @@ export class AuthController {
   @Public()
   @Post("register")
   @HttpCode(HttpStatus.CREATED)
+  @UseGuards(RateLimitGuard)
+  @StrictRateLimit()
   @ApiOperation({
     summary: "Registrar usuario",
     description: "Crea un nuevo usuario y retorna tokens JWT",
@@ -47,6 +54,10 @@ export class AuthController {
   @ApiResponse({
     status: 400,
     description: "Error de validación",
+  })
+  @ApiResponse({
+    status: 429,
+    description: "Demasiados intentos de registro",
   })
   async register(
     @Body()
@@ -62,6 +73,8 @@ export class AuthController {
   @Public()
   @Post("login")
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(RateLimitGuard)
+  @AuthRateLimit()
   @ApiOperation({
     summary: "Iniciar sesión",
     description: "Autentica un usuario y retorna tokens JWT",
@@ -73,6 +86,10 @@ export class AuthController {
   @ApiResponse({
     status: 401,
     description: "Credenciales inválidas",
+  })
+  @ApiResponse({
+    status: 429,
+    description: "Demasiados intentos de login",
   })
   async login(
     @Body() loginDto: LoginDto,
@@ -86,6 +103,8 @@ export class AuthController {
   @Public()
   @Post("refresh")
   @HttpCode(HttpStatus.OK)
+  @UseGuards(RateLimitGuard)
+  @AuthRateLimit()
   @ApiOperation({
     summary: "Renovar token",
     description: "Renueva el token de acceso usando el token de refresco",
@@ -98,6 +117,10 @@ export class AuthController {
   @ApiResponse({
     status: 401,
     description: "Token de refresco inválido",
+  })
+  @ApiResponse({
+    status: 429,
+    description: "Demasiados intentos de renovación",
   })
   async refreshToken(
     @Body("refreshToken") refreshToken: string,

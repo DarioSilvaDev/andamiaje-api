@@ -56,6 +56,18 @@ const envSchema = Joi.object({
     .valid("error", "warn", "info", "debug")
     .default("info"),
   LOG_DIR: Joi.string().default("./logs"),
+
+  // Configuración de email
+  MAIL_SERVICE: Joi.string(), //.default("gmail"),
+  MAIL_USER: Joi.string().email().optional(),
+  MAIL_PASSWORD: Joi.string().optional(),
+  MAIL_HOST: Joi.string().optional(),
+  MAIL_PORT: Joi.number().default(587),
+  MAIL_SECURE: Joi.boolean().default(false),
+  MAIL_FROM_NAME: Joi.string().default("Andamiaje API"),
+  MAIL_FROM_ADDRESS: Joi.string().email().default("noreply@andamiaje.com"),
+  FRONTEND_URL: Joi.string().uri().default("http://localhost:3000"),
+  MAIL_ENABLED: Joi.boolean().default(true),
 }).unknown();
 
 // Validar y exportar las variables de entorno
@@ -109,4 +121,16 @@ export const envs = {
   // Configuración de logging
   LOG_LEVEL: envVars.LOG_LEVEL,
   LOG_DIR: envVars.LOG_DIR,
+
+  // Configuración de email
+  MAIL_SERVICE: envVars.MAIL_SERVICE,
+  MAIL_USER: envVars.MAIL_USER,
+  MAIL_PASSWORD: envVars.MAIL_PASSWORD,
+  MAIL_HOST: envVars.MAIL_HOST,
+  MAIL_PORT: envVars.MAIL_PORT,
+  MAIL_SECURE: envVars.MAIL_SECURE,
+  MAIL_FROM_NAME: envVars.MAIL_FROM_NAME,
+  MAIL_FROM_ADDRESS: envVars.MAIL_FROM_ADDRESS,
+  FRONTEND_URL: envVars.FRONTEND_URL,
+  MAIL_ENABLED: envVars.MAIL_ENABLED,
 };

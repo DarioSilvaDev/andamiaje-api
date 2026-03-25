@@ -1,0 +1,9 @@
+# No ignorar nada en esta carpeta
+# Todas las migraciones deben ser versionadas
+!*.ts
+!*.js
+
+# Solo ignorar archivos temporales
+*.tmp
+*.log
+

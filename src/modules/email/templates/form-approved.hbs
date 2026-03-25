@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; }
+        .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 30px 20px; text-align: center; }
+        .header h1 { color: #fff; font-size: 24px; margin: 0; }
+        .body { padding: 40px 30px; }
+        .footer { background: #f8f9fa; padding: 20px 30px; text-align: center; font-size: 12px; color: #6c757d; border-top: 1px solid #dee2e6; }
+        .button { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: #fff !important; text-decoration: none; border-radius: 5px; font-weight: 600; margin: 10px 5px; }
+        .success-box { background: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0; border-radius: 4px; }
+        .success-box strong { color: #28a745; display: block; margin-bottom: 5px; }
+        h2 { color: #28a745; margin-bottom: 15px; font-size: 20px; }
+        p { margin-bottom: 15px; }
+        .icon { font-size: 48px; text-align: center; margin-bottom: 20px; }
+        @media only screen and (max-width: 600px) {
+            .body { padding: 20px 15px; }
+            .header h1 { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✅ Andamiaje API</h1>
+        </div>
+        <div class="body">
+            <div class="icon">🎉</div>
+            
+            <h2>¡Formulario Aprobado!</h2>
+            
+            <p>Hola <strong>{{recipientName}}</strong>,</p>
+            
+            <p>Tenemos excelentes noticias. <strong>{{approverName}}</strong> ha aprobado tu formulario.</p>
+            
+            <div class="success-box">
+                <strong>Tipo de formulario:</strong> {{formType}}
+                <strong>Título:</strong> {{formTitle}}
+                <strong>ID:</strong> {{formId}}
+                <strong>Fecha de aprobación:</strong> {{approvedAt}}
+            </div>
+            
+            <p>El PDF del formulario se ha generado automáticamente y está disponible para su descarga.</p>
+            
+            <center>
+                <a href="{{formUrl}}" class="button">Ver Formulario</a>
+                {{#if pdfUrl}}
+                <a href="{{pdfUrl}}" class="button">Descargar PDF</a>
+                {{/if}}
+            </center>
+            
+            <p style="margin-top: 30px; color: #6c757d; font-size: 14px;">
+                Si no puedes hacer clic en los botones, copia y pega estos enlaces en tu navegador:<br>
+                Formulario: <a href="{{formUrl}}" style="color: #28a745;">{{formUrl}}</a><br>
+                {{#if pdfUrl}}
+                PDF: <a href="{{pdfUrl}}" style="color: #28a745;">{{pdfUrl}}</a>
+                {{/if}}
+            </p>
+        </div>
+        <div class="footer">
+            <p>Este es un email automático, por favor no responder.</p>
+            <p>&copy; 2025 Andamiaje API. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+</html>
+

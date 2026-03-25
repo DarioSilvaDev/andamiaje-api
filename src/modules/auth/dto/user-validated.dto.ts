@@ -8,6 +8,7 @@ export class UserValidateDto {
   role: UserRole;
   firstLogin: boolean;
   hasSignature: boolean;
+  digitalSignature: string;
   firstName: string;
   lastName: string;
   phone: string;

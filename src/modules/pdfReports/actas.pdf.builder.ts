@@ -1,39 +1,95 @@
+import { Injectable } from "@nestjs/common";
 import { Content, TDocumentDefinitions } from "pdfmake/interfaces";
+import { BasePdfBuilder } from "./base.pdf.builder";
 
-const logo: Content = {
-  image: "./icon/LogotipoFinalWEBJPEG.jpg", // "./icon/andamiaje.png",
-  width: 250,
-  alignment: "center",
-};
+@Injectable()
+export class ActasPdfBuilder extends BasePdfBuilder {
+  build(data: Record<string, any>): TDocumentDefinitions {
+    const content: Content[] = [
+      ...this.createHeader("ACTA DE REUNIÓN", data.subject),
+      this.createMeetingInfo(data),
+      ...this.createTextSection("Agenda", data.agenda),
+      this.createAttendeesTable(data.attendees || []),
+      ...this.createTextSection("Decisiones Tomadas", data.decisions),
+      ...this.createTextSection("Acuerdos", data.agreements),
+      ...this.createTextSection("Próximos Pasos", data.nextSteps),
+      ...this.createTextSection("Notas Adicionales", data.additionalNotes),
+    ];
 
-export const buildActa = (data, configFromDB): TDocumentDefinitions => {
-  const docDefinition: TDocumentDefinitions = {
-    content: [
+    // Agregar información del paciente si existe
+    if (data.patient && data.patient.name) {
+      content.push(this.createPatientInfo(data.patient));
+    }
+
+    return {
+      content,
+      styles: this.defaultStyles,
+      defaultStyle: this.defaultStyle,
+      footer: (currentPage, pageCount) =>
+        this.createFooter(currentPage, pageCount),
+    };
+  }
+
+  private createMeetingInfo(data: Record<string, any>): Content {
+    return {
+      table: {
+        widths: ["*", "*"],
+        body: [
+          [
+            { text: "Información de la Reunión", style: "tableHeader", colSpan: 2 },
+            {},
+          ],
+          ["Modalidad:", data.modality || "No especificada"],
+          ["Fecha:", this.formatDate(data.meetingDate)],
+          ["Duración:", `${data.durationMinutes || 0} minutos`],
+          [
+            "Ubicación:",
+            data.modality === "PRESENCIAL"
+              ? data.location || "No especificada"
+              : data.meetingUrl || "No especificada",
+          ],
+        ],
+      },
+      layout: "lightHorizontalLines",
+      marginBottom: 15,
+    };
+  }
+
+  private createAttendeesTable(attendees: any[]): Content {
+    if (!attendees || attendees.length === 0) {
+      return { text: "" } as any;
+    }
+
+    const tableBody = [
+      [
+        { text: "Nombre", style: "tableHeader" },
+        { text: "Rol", style: "tableHeader" },
+        { text: "Asistió", style: "tableHeader" },
+        { text: "Firmó", style: "tableHeader" },
+      ],
+      ...attendees.map((attendee) => [
+        attendee.name || "",
+        attendee.role || "",
+        attendee.attended ? "Sí" : "No",
+        attendee.signature ? "Sí" : "No",
+      ]),
+    ];
+
+    return [
       {
-        image: logo.image,
-        width: logo.width,
-        alignment: logo.alignment,
-        margin: [-20, -80, 0, 0], // [left, top, right, bottom]
-      }, // Espacio entre columnas
+        text: "Asistentes",
+        style: "subheader",
+        marginTop: 10,
+        marginBottom: 5,
+      } as any,
       {
-        text: "Este es el cuerpo del acta, donde se detallan los puntos tratados y observaciones.",
-        style: "normal",
-        alignment: "justify",
-      },
-    ],
-    styles: {
-      subheader: {
-        fontSize: 16,
-        bold: true,
-      },
-      normal: {
-        fontSize: 12,
-      },
-    },
-    defaultStyle: {
-      font: "Roboto",
-    },
-  };
-
-  return docDefinition;
-};
+        table: {
+          widths: ["*", "*", "auto", "auto"],
+          body: tableBody,
+        },
+        layout: "lightHorizontalLines",
+        marginBottom: 15,
+      } as any,
+    ] as any;
+  }
+}

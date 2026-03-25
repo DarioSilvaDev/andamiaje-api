@@ -3,14 +3,23 @@ import { User } from "@/entities/user.entity";
 import { UserRepository } from "@/repositories/user.repository";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { EmailService } from "../email/email.service";
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UserRepository) {}
+  constructor(
+    private readonly usersRepository: UserRepository,
+    private readonly emailService: EmailService
+  ) {}
 
-  create(createUserDto: CreateUserDto): Promise<User> {
+  async create(createUserDto: CreateUserDto): Promise<User> {
     const user = this.usersRepository.create(createUserDto);
-    return this.usersRepository.save(user);
+    const savedUser = await this.usersRepository.save(user);
+    
+    // Enviar email de bienvenida
+    await this.emailService.sendWelcomeEmail(savedUser);
+    
+    return savedUser;
   }
 
   findAll(): Promise<User[]> {

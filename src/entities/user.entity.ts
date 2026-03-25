@@ -10,7 +10,6 @@ import {
 } from "typeorm";
 import { Exclude } from "class-transformer";
 import * as bcrypt from "bcryptjs";
-import { Document } from "./document.entity";
 import { AccountStatus, UserRole } from "@/commons/enums";
 
 @Entity("users")
@@ -73,12 +72,12 @@ export class User {
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
 
-  // Relaciones
-  @OneToMany(() => Document, (document) => document.createdBy)
-  createdDocuments: Document[];
+  // Relaciones con formularios (v2)
+  @OneToMany("BaseForm", "createdBy")
+  createdForms: any[];
 
-  @OneToMany(() => Document, (document) => document.approvedBy)
-  approvedDocuments: Document[];
+  @OneToMany("BaseForm", "approvedBy")
+  approvedForms: any[];
 
   // Métodos
   @BeforeInsert()

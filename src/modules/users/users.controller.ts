@@ -39,7 +39,7 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
-  @Put(":id")
+  @Put("profile/:id")
   update(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto

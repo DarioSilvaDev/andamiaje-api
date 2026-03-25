@@ -55,6 +55,7 @@ export class AuthService {
       documentNumber: user.documentNumber,
       firstLogin: user.firstLogin,
       hasSignature: !!user.digitalSignature,
+      digitalSignature: user.digitalSignature,
       firstName: user.firstName,
       lastName: user.lastName,
       phone: user.phone,

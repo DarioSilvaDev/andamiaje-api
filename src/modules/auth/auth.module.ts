@@ -10,6 +10,8 @@ import { AuthorizationService } from "./services/authorization.service";
 import { RolesGuard } from "./guards/roles.guard";
 import { AuthRolesGuard } from "./guards/auth-roles.guard";
 import { OwnerGuard } from "./guards/owner.guard";
+import { RateLimitGuard } from "./guards/rate-limit.guard";
+import { RateLimitService } from "./services/rate-limit.service";
 import { AuthLoggingInterceptor } from "./interceptors/auth-logging.interceptor";
 import { envs } from "@/config/envs";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
@@ -31,11 +33,13 @@ import { User } from "@/entities";
     JwtStrategy,
     LocalStrategy,
     AuthorizationService,
+    RateLimitService,
     // Guards
     JwtAuthGuard,
     RolesGuard,
     AuthRolesGuard,
     OwnerGuard,
+    RateLimitGuard,
     // Interceptors
     AuthLoggingInterceptor,
     // Repositories
@@ -44,9 +48,12 @@ import { User } from "@/entities";
   exports: [
     AuthService,
     AuthorizationService,
+    JwtAuthGuard, // Exportar JwtAuthGuard
     RolesGuard,
     AuthRolesGuard,
     OwnerGuard,
+    RateLimitGuard,
+    RateLimitService,
     AuthLoggingInterceptor,
   ],
 })
