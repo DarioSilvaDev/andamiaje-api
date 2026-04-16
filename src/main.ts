@@ -42,7 +42,7 @@ async function bootstrap() {
           errors: formatErrors(errors),
         });
       },
-    })
+    }),
   );
 
   app.enableCors(corsConfig);
@@ -51,7 +51,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle("Andamiaje API")
     .setDescription(
-      "API para gestión de usuarios y archivos con sistema de roles"
+      "API para gestión de usuarios y archivos con sistema de roles",
     )
     .setVersion(envs.NPM_PACKAGE_VERSION)
     .addBearerAuth()
@@ -63,15 +63,16 @@ async function bootstrap() {
   const port = envs.PORT;
   await app.listen(port);
 
-  console.log(
-    `🚀 Aplicación ejecutándose en: http://localhost:${port}/${envs.API_PREFIX}`
+  logger.log(
+    `🚀 Aplicación ejecutándose en: http://localhost:${port}/${envs.API_PREFIX}`,
   );
-  console.log(
-    `📚 Documentación disponible en: http://localhost:${port}/api/docs`
+  logger.log(
+    `📚 Documentación disponible en: http://localhost:${port}/api/docs`,
   );
 }
 
 bootstrap().catch((error) => {
-  console.error("Error al iniciar la aplicación:", error);
+  const logger = new Logger("Bootstrap");
+  logger.error("Error al iniciar la aplicación", error);
   process.exit(1);
 });

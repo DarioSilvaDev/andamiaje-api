@@ -5,11 +5,7 @@ import { FormEntity } from "@/entities/form.entity";
 import { PlanForm } from "@/entities/planForm.entity";
 import { SemestralReportForm } from "@/entities/semestral_reports.entity";
 import { FormFactory } from "@/factory/form.factory";
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { FORMTYPE, UserRole } from "../../commons/enums";
@@ -119,12 +115,6 @@ export class FormsService {
     reviewDto: ReviewFormDto,
     reviewer: User,
   ): Promise<Document> {
-    if (reviewer.role !== UserRole.DIRECTOR) {
-      throw new ForbiddenException(
-        "Solo directores pueden aprobar o rechazar formularios",
-      );
-    }
-
     const form = await this.getById(formId);
 
     let document = await this.documentRepository.findOne({

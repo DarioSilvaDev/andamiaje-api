@@ -15,6 +15,8 @@ import { AllowPendingSignature, CurrentUser } from "../auth";
 import { User } from "@/entities";
 import { AccountStatus } from "@/commons/enums";
 import { Express } from "express"; // import explícito
+import { UploadFileQueryDto } from "./dto/upload-file-query.dto";
+import { StorageFileType } from "./enums/storage-file-type.enum";
 
 @Controller("storage")
 export class StorageController {
@@ -26,10 +28,12 @@ export class StorageController {
   async upload(
     @CurrentUser() user: User,
     @UploadedFile() file: Express.Multer.File,
-    @Query("type") type: string,
+    @Query() query: UploadFileQueryDto,
   ) {
+    const { type } = query;
+
     if (
-      type !== "FIRMA_DIGITAL" &&
+      type !== StorageFileType.FIRMA_DIGITAL &&
       user.accountStatus !== AccountStatus.ACTIVE
     ) {
       throw new ForbiddenException("Solo es posible la carga de firma digital");

@@ -6,11 +6,16 @@ import {
   Param,
   ParseIntPipe,
   Patch,
-  ForbiddenException,
   UseGuards,
 } from "@nestjs/common";
 import { FormsService } from "./forms.service";
-import { CurrentUser, OwnerCheck, OwnerGuard } from "../auth";
+import {
+  CurrentUser,
+  OwnerCheck,
+  OwnerGuard,
+  Roles,
+  RolesGuard,
+} from "../auth";
 import { CreateFormDto } from "./dto/create-form.dto";
 import { FormEntity, User } from "@/entities";
 import { ReviewFormDto } from "./dto/review-form.dto";
@@ -35,13 +40,9 @@ export class FormsController {
   }
 
   @Get("pending")
-  async getPendingForms(@CurrentUser() user: User) {
-    if (user.role !== UserRole.DIRECTOR) {
-      throw new ForbiddenException(
-        "Solo directores pueden listar formularios pendientes",
-      );
-    }
-
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.DIRECTOR)
+  async getPendingForms() {
     return this.formsService.getPendings();
   }
 
@@ -58,6 +59,8 @@ export class FormsController {
   }
 
   @Patch(":id/review")
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.DIRECTOR)
   async reviewForm(
     @Param("id", ParseIntPipe) id: number,
     @Body() reviewDto: ReviewFormDto,

@@ -20,6 +20,7 @@ import { UserRepository } from "@/repositories";
 import { AccountStatus, UserRole } from "@/commons/enums";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { StorageFileType } from "./enums/storage-file-type.enum";
 
 @Injectable()
 export class StorageService {
@@ -49,18 +50,19 @@ export class StorageService {
 
   async uploadFile(
     file: Express.Multer.File,
-    type: string,
+    type: StorageFileType,
     user: User,
   ): Promise<string> {
+    if (!file) {
+      throw new BadRequestException("El archivo es obligatorio");
+    }
+
     if (!this.allowedMimeTypes.includes(file.mimetype)) {
       throw new BadRequestException("Tipo de archivo no permitido");
     }
 
     // Asignar carpeta según tipo
     const folder = this.mapTypeToFolder(type);
-    if (!folder) {
-      throw new BadRequestException("Tipo de documento no soportado");
-    }
 
     const key = `${folder}/${user.documentNumber}-${Date.now()}-${file.originalname}`;
 
@@ -81,7 +83,7 @@ export class StorageService {
         "No fue posible subir el documento",
       );
     }
-    if (type == "FIRMA_DIGITAL") {
+    if (type === StorageFileType.FIRMA_DIGITAL) {
       await this.userRepository.updateUser(user.id, {
         accountStatus: AccountStatus.ACTIVE,
         firstLogin: false,
@@ -117,21 +119,22 @@ export class StorageService {
   }
 
   // Mapeo de tipos a carpetas
-  private mapTypeToFolder(type: string): string | null {
-    const map: Record<string, string> = {
-      PLAN_TRABAJO: "plan_trabajo",
-      INFORME_SEMESTRAL: "informes",
-      INFORME_ADMISION: "informes",
-      ACTAS: "actas",
-      REPORTE_MENSUAL: "reportes",
-      SEGUIMIENTO_ACOMPANANTE: "seguimiento_acompanante",
-      SEGUIMIENTO_ACOMPANIANTE_EXTERNO: "seguimiento_acompanante",
-      SEGUIMIENTO_FAMILIA: "seguimiento_familia",
-      FACTURA: "facturas",
-      FIRMA_DIGITAL: "firmas",
+  private mapTypeToFolder(type: StorageFileType): string {
+    const map: Record<StorageFileType, string> = {
+      [StorageFileType.PLAN_TRABAJO]: "plan_trabajo",
+      [StorageFileType.INFORME_SEMESTRAL]: "informes",
+      [StorageFileType.INFORME_ADMISION]: "informes",
+      [StorageFileType.ACTAS]: "actas",
+      [StorageFileType.REPORTE_MENSUAL]: "reportes",
+      [StorageFileType.SEGUIMIENTO_ACOMPANANTE]: "seguimiento_acompanante",
+      [StorageFileType.SEGUIMIENTO_ACOMPANIANTE_EXTERNO]:
+        "seguimiento_acompanante",
+      [StorageFileType.SEGUIMIENTO_FAMILIA]: "seguimiento_familia",
+      [StorageFileType.FACTURA]: "facturas",
+      [StorageFileType.FIRMA_DIGITAL]: "firmas",
     };
 
-    return map[type] || null;
+    return map[type];
   }
 
   async getSignedUrl(key: string) {

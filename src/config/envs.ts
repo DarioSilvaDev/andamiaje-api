@@ -37,7 +37,11 @@ const envSchema = Joi.object({
   B2_APP_KEY: Joi.string().required(),
   B2_BUCKET_ID: Joi.string().required(),
 
-  ALLOWEDORIGINSPROD: Joi.string().default("http://localhost:3000"),
+  ALLOWED_ORIGINS: Joi.string().default(
+    process.env.ALLOWED_ORIGINS ||
+      process.env.ALLOWEDORIGINSPROD ||
+      "http://localhost:3000",
+  ),
 
   DATABASE_URL: Joi.string().required(),
   DB_SYNCHRONIZE: Joi.boolean().default(false),
@@ -100,7 +104,7 @@ export const envs = {
   DB_LOGGING: envVars.DB_LOGGING,
   DB_SSL: envVars.DB_SSL,
 
-  ALLOWEDORIGINSPROD: envVars.ALLOWEDORIGINSPROD,
+  ALLOWED_ORIGINS: envVars.ALLOWED_ORIGINS,
 
   // Configuración de JWT
   JWT_SECRET: envVars.JWT_SECRET,

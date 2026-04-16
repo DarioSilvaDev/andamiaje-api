@@ -80,8 +80,19 @@ export class UserRepository extends Repository<User> {
     return this.findOne({ where: { id } });
   }
 
-  async updateUser(id: number, updateUserDto: Partial<User>): Promise<User> {
-    await this.update(id, updateUserDto);
+  async updateUser(
+    id: number,
+    updateUserDto: Partial<User>,
+  ): Promise<User | null> {
+    const user = await this.findOne({ where: { id } });
+
+    if (!user) {
+      return null;
+    }
+
+    Object.assign(user, updateUserDto);
+    await this.save(user);
+
     return this.findOneWithOptionalPassword({ id }, false);
   }
 

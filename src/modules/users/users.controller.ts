@@ -1,5 +1,4 @@
 import {
-  ForbiddenException,
   Controller,
   Get,
   Post,
@@ -17,7 +16,13 @@ import {
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UsersService } from "./users.service";
-import { CurrentUser, OwnerCheck, OwnerGuard } from "../auth";
+import {
+  CurrentUser,
+  OwnerCheck,
+  OwnerGuard,
+  Roles,
+  RolesGuard,
+} from "../auth";
 import { User } from "@/entities";
 import { ReviewUserDto } from "./dto/review-user.dto";
 import { UserRole } from "@/commons/enums";
@@ -32,11 +37,9 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto, @CurrentUser() user: User) {
-    if (user.role !== UserRole.DIRECTOR) {
-      throw new ForbiddenException("Solo directores pueden crear usuarios");
-    }
-
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.DIRECTOR)
+  create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
@@ -46,17 +49,20 @@ export class UsersController {
   }
 
   @Get("pending")
-  findPendingUsers(@CurrentUser() user: User) {
-    return this.usersService.findPendingApprovals(user);
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.DIRECTOR)
+  findPendingUsers() {
+    return this.usersService.findPendingApprovals();
   }
 
   @Patch(":id/review")
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.DIRECTOR)
   reviewPendingUser(
     @Param("id", ParseIntPipe) id: number,
     @Body() reviewUserDto: ReviewUserDto,
-    @CurrentUser() reviewer: User,
   ) {
-    return this.usersService.reviewPendingUser(id, reviewUserDto, reviewer);
+    return this.usersService.reviewPendingUser(id, reviewUserDto);
   }
 
   @Get(":id")

@@ -102,23 +102,11 @@ export class UsersService {
     return this.usersRepository.deactivateUser(id);
   }
 
-  findPendingApprovals(currentUser: User): Promise<User[]> {
-    if (currentUser.role !== UserRole.DIRECTOR) {
-      throw new ForbiddenException("Solo directores pueden ver pendientes");
-    }
-
+  findPendingApprovals(): Promise<User[]> {
     return this.usersRepository.findPendingApprovalUsers();
   }
 
-  async reviewPendingUser(
-    id: number,
-    dto: ReviewUserDto,
-    reviewer: User,
-  ): Promise<User> {
-    if (reviewer.role !== UserRole.DIRECTOR) {
-      throw new ForbiddenException("Solo directores pueden revisar usuarios");
-    }
-
+  async reviewPendingUser(id: number, dto: ReviewUserDto): Promise<User> {
     const user = await this.usersRepository.findOneById(id);
 
     if (!user) {
