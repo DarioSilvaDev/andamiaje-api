@@ -221,4 +221,19 @@ export class StorageService {
       );
     }
   }
+
+  async deleteObjectByKey(key: string): Promise<void> {
+    const normalizedKey = this.normalizeKey(key);
+
+    const command = new DeleteObjectCommand({
+      Bucket: this.bucket,
+      Key: normalizedKey,
+    });
+
+    try {
+      await this.s3.send(command);
+    } catch (error) {
+      this.logger.error(error);
+    }
+  }
 }

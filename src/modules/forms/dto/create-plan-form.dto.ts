@@ -1,25 +1,38 @@
-import { IsNotEmpty, IsString, IsNumber, IsArray } from "class-validator";
+import {
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateIf,
+} from "class-validator";
 
 export class PlanFormDto {
-  @IsNotEmpty({ message: "El campo 'professional' es obligatorio" })
+  @IsOptional()
   @IsString({ message: "El campo 'professional' debe ser texto" })
-  professional: string;
+  professional?: string;
 
-  @IsNotEmpty({ message: "El campo 'specialization' es obligatorio" })
+  @IsOptional()
   @IsString({ message: "El campo 'specialization' debe ser texto" })
-  specialization: string;
+  specialization?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
-  licenseNumber: number;
+  licenseNumber?: number;
 
   @IsNotEmpty({ message: "El campo 'period' es obligatorio" })
   @IsString({ message: "El campo 'period' debe ser texto" })
   period: string;
 
+  @ValidateIf((dto) => !dto.foundation)
+  @IsNotEmpty({ message: "El campo 'fundamentation' es obligatorio" })
+  @IsString({ message: "El campo 'fundamentation' debe ser texto" })
+  fundamentation?: string;
+
+  @ValidateIf((dto) => !dto.fundamentation)
   @IsNotEmpty({ message: "El campo 'foundation' es obligatorio" })
   @IsString({ message: "El campo 'foundation' debe ser texto" })
-  foundation: string;
+  foundation?: string;
 
   @IsArray()
   @IsString({ each: true })
@@ -29,7 +42,13 @@ export class PlanFormDto {
   @IsString({ each: true })
   specificObjectives: string[];
 
+  @ValidateIf((dto) => !dto.approachMethod)
+  @IsNotEmpty({ message: "El campo 'workModality' es obligatorio" })
+  @IsString({ message: "El campo 'workModality' debe ser texto" })
+  workModality?: string;
+
+  @ValidateIf((dto) => !dto.workModality)
   @IsNotEmpty({ message: "El campo 'approachMethod' es obligatorio" })
   @IsString({ message: "El campo 'approachMethod' debe ser texto" })
-  approachMethod: string;
+  approachMethod?: string;
 }

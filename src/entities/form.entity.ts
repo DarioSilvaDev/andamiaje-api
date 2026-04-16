@@ -28,7 +28,7 @@ export class FormEntity {
   age?: number;
 
   @Column({ nullable: true, type: "date", name: "birth_date" })
-  birthdate?: Date;
+  birthDate?: Date;
 
   @Column({ nullable: true, type: "text" })
   diagnosis?: string;

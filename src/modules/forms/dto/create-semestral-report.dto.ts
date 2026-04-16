@@ -1,17 +1,23 @@
-import { IsNotEmpty, IsString, IsNumber } from "class-validator";
+import {
+  IsNotEmpty,
+  IsString,
+  IsNumber,
+  IsOptional,
+  ValidateIf,
+} from "class-validator";
 
 export class SemestralReportDto {
-  @IsNotEmpty({ message: "El campo 'professional' es obligatorio" })
+  @IsOptional()
   @IsString({ message: "El campo 'professional' debe ser texto" })
-  professional: string;
+  professional?: string;
 
-  @IsNotEmpty({ message: "El campo 'specialization' es obligatorio" })
+  @IsOptional()
   @IsString({ message: "El campo 'specialization' debe ser texto" })
-  specialization: string;
+  specialization?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
-  licenseNumber: number;
+  licenseNumber?: number;
 
   @IsNotEmpty({ message: "El campo 'period' es obligatorio" })
   @IsString({ message: "El campo 'period' debe ser texto" })
@@ -21,9 +27,15 @@ export class SemestralReportDto {
   @IsString({ message: "El campo 'characterization' debe ser texto" })
   characterization: string;
 
+  @ValidateIf((dto) => !dto.evolution)
+  @IsNotEmpty({ message: "El campo 'periodEvolution' es obligatorio" })
+  @IsString({ message: "El campo 'periodEvolution' debe ser texto" })
+  periodEvolution?: string;
+
+  @ValidateIf((dto) => !dto.periodEvolution)
   @IsNotEmpty({ message: "El campo 'evolution' es obligatorio" })
   @IsString({ message: "El campo 'evolution' debe ser texto" })
-  evolution: string;
+  evolution?: string;
 
   @IsNotEmpty({ message: "El campo 'suggestions' es obligatorio" })
   @IsString({ message: "El campo 'suggestions' debe ser texto" })
