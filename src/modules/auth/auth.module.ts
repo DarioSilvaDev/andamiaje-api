@@ -15,11 +15,13 @@ import { envs } from "@/config/envs";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { LocalStrategy } from "./strategies/local.strategy";
 import { User } from "@/entities";
+import { NotificationsModule } from "../notifications/notifications.module";
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     PassportModule,
+    NotificationsModule,
     JwtModule.register({
       secret: envs.JWT_SECRET,
       signOptions: { expiresIn: envs.JWT_EXPIRES_IN },

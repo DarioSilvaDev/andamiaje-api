@@ -11,7 +11,7 @@ import {
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { StorageService } from "./storage.service";
-import { CurrentUser } from "../auth";
+import { AllowPendingSignature, CurrentUser } from "../auth";
 import { User } from "@/entities";
 import { AccountStatus } from "@/commons/enums";
 import { Express } from "express"; // import explícito
@@ -21,11 +21,12 @@ export class StorageController {
   constructor(private readonly storageService: StorageService) {}
 
   @Post("upload")
+  @AllowPendingSignature()
   @UseInterceptors(FileInterceptor("file"))
   async upload(
     @CurrentUser() user: User,
     @UploadedFile() file: Express.Multer.File,
-    @Query("type") type: string
+    @Query("type") type: string,
   ) {
     if (
       type !== "FIRMA_DIGITAL" &&
@@ -38,17 +39,22 @@ export class StorageController {
   }
 
   @Get("download")
-  async download(@Query("key") key: string) {
-    return { url: await this.storageService.getSignedUrl(key) };
+  async download(@CurrentUser() user: User, @Query("key") key: string) {
+    return this.storageService.findOneByKey(key, user);
   }
 
-  @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.storageService.findOne(+id);
+  @Get("file/:key")
+  findOne(@Param("key") key: string, @CurrentUser() user: User) {
+    return this.storageService.findOneByKey(key, user);
   }
 
-  @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.storageService.remove(+id);
+  @Delete("file")
+  removeByQuery(@Query("key") key: string, @CurrentUser() user: User) {
+    return this.storageService.removeByKey(key, user);
+  }
+
+  @Delete("file/:key")
+  remove(@Param("key") key: string, @CurrentUser() user: User) {
+    return this.storageService.removeByKey(key, user);
   }
 }

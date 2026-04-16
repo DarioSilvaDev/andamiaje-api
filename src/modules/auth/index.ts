@@ -8,6 +8,7 @@ export { OwnerGuard } from "./guards/owner.guard";
 export { CurrentUser } from "./decorators/current-user.decorator";
 export { Roles } from "./decorators/roles.decorator";
 export { OwnerCheck } from "./decorators/owner-check.decorator";
+export { AllowPendingSignature } from "./decorators/allow-pending-signature.decorator";
 
 // Services
 export { AuthService } from "./auth.service";

@@ -1,12 +1,15 @@
 import {
+  ForbiddenException,
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Param,
   Put,
   Delete,
   ParseIntPipe,
+  UseGuards,
   // Patch,
   // UseInterceptors,
   // UploadedFile,
@@ -14,6 +17,10 @@ import {
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UsersService } from "./users.service";
+import { CurrentUser, OwnerCheck, OwnerGuard } from "../auth";
+import { User } from "@/entities";
+import { ReviewUserDto } from "./dto/review-user.dto";
+import { UserRole } from "@/commons/enums";
 // import { FileInterceptor } from "@nestjs/platform-express";
 // import { diskStorage } from "multer";
 // import { extname } from "path";
@@ -25,26 +32,57 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
+  create(@Body() createUserDto: CreateUserDto, @CurrentUser() user: User) {
+    if (user.role !== UserRole.DIRECTOR) {
+      throw new ForbiddenException("Solo directores pueden crear usuarios");
+    }
+
     return this.usersService.create(createUserDto);
   }
 
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  findAll(@CurrentUser() user: User) {
+    return this.usersService.findAll(user);
+  }
+
+  @Get("pending")
+  findPendingUsers(@CurrentUser() user: User) {
+    return this.usersService.findPendingApprovals(user);
+  }
+
+  @Patch(":id/review")
+  reviewPendingUser(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() reviewUserDto: ReviewUserDto,
+    @CurrentUser() reviewer: User,
+  ) {
+    return this.usersService.reviewPendingUser(id, reviewUserDto, reviewer);
   }
 
   @Get(":id")
+  @UseGuards(OwnerGuard)
+  @OwnerCheck({
+    entity: User,
+    idField: "id",
+    ownerField: "id",
+  })
   findOne(@Param("id", ParseIntPipe) id: number) {
     return this.usersService.findOne(id);
   }
 
   @Put(":id")
+  @UseGuards(OwnerGuard)
+  @OwnerCheck({
+    entity: User,
+    idField: "id",
+    ownerField: "id",
+  })
   update(
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateUserDto: UpdateUserDto
+    @Body() updateUserDto: UpdateUserDto,
+    @CurrentUser() user: User,
   ) {
-    return this.usersService.update(id, updateUserDto);
+    return this.usersService.update(id, updateUserDto, user);
   }
 
   // @Patch("/signature")
@@ -68,7 +106,13 @@ export class UsersController {
   // }
 
   @Delete(":id")
-  remove(@Param("id", ParseIntPipe) id: number) {
-    return this.usersService.remove(id);
+  @UseGuards(OwnerGuard)
+  @OwnerCheck({
+    entity: User,
+    idField: "id",
+    ownerField: "id",
+  })
+  remove(@Param("id", ParseIntPipe) id: number, @CurrentUser() user: User) {
+    return this.usersService.remove(id, user);
   }
 }

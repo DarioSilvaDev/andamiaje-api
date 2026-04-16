@@ -5,7 +5,9 @@ import {
   HttpCode,
   HttpStatus,
   Get,
+  Req,
   Res,
+  UnauthorizedException,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -16,16 +18,17 @@ import {
 import { AuthService } from "./auth.service";
 import { LoginDto } from "./dto/login.dto";
 import { AuthResponseDto } from "./dto/auth-response.dto";
-import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { CurrentUser } from "./decorators/current-user.decorator";
 import { User } from "@/entities/user.entity";
-import { Response } from "express";
+import { Request, Response } from "express";
 import { RegisterDto } from "./dto/register.dto";
 import { Public } from "./decorators/public.decorator";
 import {
   clearAuthCookies,
   setAuthCookies,
 } from "./utils/set-auth-cookies.util";
+import { RefreshTokenDto } from "./dto/refresh-token.dto";
+import { AllowPendingSignature } from "./decorators/allow-pending-signature.decorator";
 
 @ApiTags("Autenticación")
 @Controller("auth")
@@ -37,12 +40,11 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: "Registrar usuario",
-    description: "Crea un nuevo usuario y retorna tokens JWT",
+    description: "Crea una solicitud de registro pendiente de aprobación",
   })
   @ApiResponse({
     status: 201,
-    description: "Usuario registrado exitosamente",
-    type: AuthResponseDto,
+    description: "Solicitud de registro creada y pendiente de aprobación",
   })
   @ApiResponse({
     status: 400,
@@ -51,24 +53,43 @@ export class AuthController {
   async register(
     @Body()
     registerDto: RegisterDto,
-    @Res({ passthrough: true }) res: Response
-  ): Promise<AuthResponseDto> {
-    const authResponse = await this.authService.register(registerDto);
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ message: string; status: string }> {
+    clearAuthCookies(res);
+    return this.authService.register(registerDto);
+  }
 
-    setAuthCookies(res, authResponse);
-    return authResponse;
+  @Public()
+  @Post("reapply")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Reaplicar registro",
+    description:
+      "Permite reenviar una solicitud de registro previamente rechazada",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Solicitud reenviada para revisión",
+  })
+  async reapply(
+    @Body() registerDto: RegisterDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ message: string; status: string }> {
+    clearAuthCookies(res);
+    return this.authService.reapply(registerDto);
   }
 
   @Public()
   @Post("login")
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: "Iniciar sesión",
     description: "Autentica un usuario y retorna tokens JWT",
   })
   @ApiResponse({
-    status: 204,
+    status: 200,
     description: "Login exitoso",
+    type: AuthResponseDto,
   })
   @ApiResponse({
     status: 401,
@@ -76,11 +97,12 @@ export class AuthController {
   })
   async login(
     @Body() loginDto: LoginDto,
-    @Res({ passthrough: true }) res: Response
-  ) {
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthResponseDto> {
     const authResponse = await this.authService.login(loginDto);
 
     setAuthCookies(res, authResponse);
+    return authResponse;
   }
 
   @Public()
@@ -100,9 +122,17 @@ export class AuthController {
     description: "Token de refresco inválido",
   })
   async refreshToken(
-    @Body("refreshToken") refreshToken: string,
-    @Res({ passthrough: true }) res: Response
+    @Req() request: Request,
+    @Body() refreshTokenDto: RefreshTokenDto,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponseDto> {
+    const refreshTokenFromCookie = request.cookies?.refreshToken;
+    const refreshToken = refreshTokenFromCookie || refreshTokenDto.refreshToken;
+
+    if (!refreshToken) {
+      throw new UnauthorizedException("Refresh token no provisto");
+    }
+
     const authResponse = await this.authService.refreshToken(refreshToken);
     setAuthCookies(res, authResponse);
     return authResponse;
@@ -128,6 +158,7 @@ export class AuthController {
   }
 
   @Post("logout")
+  @AllowPendingSignature()
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
@@ -139,8 +170,11 @@ export class AuthController {
     status: 204,
     description: "Logout exitoso",
   })
-  async logout(@Res({ passthrough: true }) res: Response) {
-    // En una implementación real, podrías agregar el token a una lista negra
+  async logout(
+    @CurrentUser() user: User,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    await this.authService.logout(user.id);
     clearAuthCookies(res);
   }
 }

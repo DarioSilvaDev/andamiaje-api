@@ -6,6 +6,7 @@ import { OwnerGuard } from "@/modules/auth/guards/owner.guard";
 import { Roles } from "@/modules/auth/decorators/roles.decorator";
 import { OwnerCheck } from "@/modules/auth/decorators/owner-check.decorator";
 import { UserRole } from "../enums";
+import { Document } from "@/entities";
 
 @ApiTags("Ejemplo de Autorización")
 @Controller("example")
@@ -41,13 +42,14 @@ export class AuthorizationExampleController {
     UserRole.TERAPEUTA,
     UserRole.ACOMPANIANTE_EXTERNO,
     UserRole.COORDINADOR_UNO,
-    UserRole.COORDINADOR_DOS
+    UserRole.COORDINADOR_DOS,
   )
   @UseGuards(OwnerGuard)
   @OwnerCheck({
-    entityName: "Document",
+    entity: Document,
     idField: "id",
-    ownerField: "createdById",
+    ownerField: "createdBy.id",
+    relations: ["createdBy"],
   })
   @ApiOperation({ summary: "Actualizar documento propio" })
   updateOwnDocument() {

@@ -15,11 +15,14 @@ export class Document {
   @PrimaryGeneratedColumn("increment")
   id: number;
 
-  @Column({ name: "file_url" })
-  fileUrl: string; // URL en S3 del PDF generado
+  @Column({ name: "file_url", nullable: true })
+  fileUrl: string | null; // URL en S3 del PDF generado
 
   @Column({ default: false })
   approved: boolean;
+
+  @Column({ name: "rejection_reason", type: "text", nullable: true })
+  rejectionReason: string | null;
 
   @ManyToOne(() => User, (user) => user.createdDocuments)
   @JoinColumn({ name: "created_by" })

@@ -1,4 +1,5 @@
-import { IsString, IsEmail, IsNotEmpty } from "class-validator";
+import { IsString, IsEmail, IsNotEmpty, IsEnum } from "class-validator";
+import { UserRole } from "@/commons/enums";
 
 export class CreateUserDto {
   @IsString()
@@ -20,4 +21,12 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
   phone: string;
+
+  @IsString()
+  @IsNotEmpty()
+  documentNumber: string;
+
+  @IsEnum(UserRole)
+  @IsNotEmpty()
+  role: UserRole;
 }

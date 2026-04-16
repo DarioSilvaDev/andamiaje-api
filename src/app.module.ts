@@ -31,11 +31,9 @@ import { JwtAuthGuard } from "./modules/auth";
       // username: envs.DB_USERNAME || "andamiaje",
       // password: envs.DB_PASSWORD || "andamiaje",
       // database: envs.DB_DATABASE || "andamiaje",
-      synchronize: envs.NODE_ENV !== "production",
-      ssl: {
-        rejectUnauthorized: false, // necesaruio para neon
-      },
-      logging: envs.NODE_ENV !== "production",
+      synchronize: envs.DB_SYNCHRONIZE,
+      ssl: envs.DB_SSL ? { rejectUnauthorized: false } : false,
+      logging: envs.DB_LOGGING,
       entities: [
         ActaForm,
         AdmissionForm,

@@ -12,10 +12,10 @@ const envSchema = Joi.object({
     .default("development"),
 
   PACKAGE_VERSION: Joi.string().default(
-    process.env.npm_package_version || "1.0"
+    process.env.npm_package_version || "1.0",
   ),
   PACKAGE_NAME: Joi.string().default(
-    process.env.npm_package_name || "andamiaje-api"
+    process.env.npm_package_name || "andamiaje-api",
   ),
 
   PORT: Joi.number().default(5001),
@@ -40,6 +40,9 @@ const envSchema = Joi.object({
   ALLOWEDORIGINSPROD: Joi.string().default("http://localhost:3000"),
 
   DATABASE_URL: Joi.string().required(),
+  DB_SYNCHRONIZE: Joi.boolean().default(false),
+  DB_LOGGING: Joi.boolean().default(false),
+  DB_SSL: Joi.boolean().default(true),
 
   // Configuración de JWT
   JWT_SECRET: Joi.string().required(),
@@ -63,7 +66,7 @@ const { error, value: envVars } = envSchema.validate(process.env);
 
 if (error) {
   throw new Error(
-    `Error de validación de variables de entorno: ${error.details.map((detail) => detail.message).join(", ")}`
+    `Error de validación de variables de entorno: ${error.details.map((detail) => detail.message).join(", ")}`,
   );
 }
 
@@ -93,6 +96,9 @@ export const envs = {
   B2_BUCKET_ID: envVars.B2_BUCKET_ID,
 
   DATABASE_URL: envVars.DATABASE_URL,
+  DB_SYNCHRONIZE: envVars.DB_SYNCHRONIZE,
+  DB_LOGGING: envVars.DB_LOGGING,
+  DB_SSL: envVars.DB_SSL,
 
   ALLOWEDORIGINSPROD: envVars.ALLOWEDORIGINSPROD,
 

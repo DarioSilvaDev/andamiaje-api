@@ -17,8 +17,23 @@ export class PrinterService {
 
   createPdf(
     docDefinition: TDocumentDefinitions,
-    options: BufferOptions = {}
+    options: BufferOptions = {},
   ): PDFKit.PDFDocument {
     return this.printer.createPdfKitDocument(docDefinition, options);
+  }
+
+  async createPdfBuffer(
+    docDefinition: TDocumentDefinitions,
+    options: BufferOptions = {},
+  ): Promise<Buffer> {
+    const doc = this.createPdf(docDefinition, options);
+    const chunks: Buffer[] = [];
+
+    return new Promise((resolve, reject) => {
+      doc.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+      doc.on("end", () => resolve(Buffer.concat(chunks)));
+      doc.on("error", reject);
+      doc.end();
+    });
   }
 }

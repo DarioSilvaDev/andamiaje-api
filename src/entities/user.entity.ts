@@ -33,16 +33,16 @@ export class User {
   @Column({ unique: true, length: 20 })
   phone: string;
 
-  @Column()
+  @Column({ select: false })
   @Exclude()
   password: string;
 
   @Column({
     type: "enum",
     enum: UserRole,
-    default: UserRole.TERAPEUTA,
+    nullable: true,
   })
-  role: UserRole;
+  role: UserRole | null;
 
   @Column({ name: "digital_signature", nullable: true })
   digitalSignature: string;
@@ -50,10 +50,17 @@ export class User {
   @Column({
     type: "enum",
     enum: AccountStatus,
-    default: AccountStatus.PENDING_SIGNATURE,
+    default: AccountStatus.PENDING_APPROVAL,
     name: "account_status",
   })
   accountStatus: AccountStatus;
+
+  @Column({ name: "refresh_token_hash", nullable: true })
+  @Exclude()
+  refreshTokenHash?: string | null;
+
+  @Column({ name: "rejection_reason", nullable: true, type: "text" })
+  rejectionReason?: string | null;
 
   @Column({ nullable: true })
   specialization?: string;

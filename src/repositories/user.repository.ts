@@ -10,7 +10,7 @@ export class UserRepository extends Repository<User> {
 
   async findOneWithOptionalPassword(
     fields: Partial<User>,
-    includePassword = false
+    includePassword = false,
   ): Promise<User | null> {
     const query = this.createQueryBuilder("user");
 
@@ -26,7 +26,11 @@ export class UserRepository extends Repository<User> {
   }
 
   async findByDocumentNumber(documentNumber: string): Promise<User | null> {
-    return this.findOne({ where: { documentNumber } });
+    return this.findOneWithOptionalPassword({ documentNumber }, true);
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.findOne({ where: { email } });
   }
 
   async findByRole(role: UserRole): Promise<User[]> {
@@ -35,6 +39,13 @@ export class UserRepository extends Repository<User> {
 
   async findActiveUsers(): Promise<User[]> {
     return this.find({ where: { accountStatus: AccountStatus.ACTIVE } });
+  }
+
+  async findPendingApprovalUsers(): Promise<User[]> {
+    return this.find({
+      where: { accountStatus: AccountStatus.PENDING_APPROVAL },
+      order: { createdAt: "ASC" },
+    });
   }
 
   async findUsersByRoles(roles: UserRole[]): Promise<User[]> {

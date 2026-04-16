@@ -1,8 +1,20 @@
-import { Controller, Post, Body, Get, Query } from "@nestjs/common";
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  ForbiddenException,
+  UseGuards,
+} from "@nestjs/common";
 import { FormsService } from "./forms.service";
-import { CurrentUser } from "../auth";
+import { CurrentUser, OwnerCheck, OwnerGuard } from "../auth";
 import { CreateFormDto } from "./dto/create-form.dto";
-import { User } from "@/entities";
+import { FormEntity, User } from "@/entities";
+import { ReviewFormDto } from "./dto/review-form.dto";
+import { UserRole } from "@/commons/enums";
 
 @Controller("forms")
 export class FormsController {
@@ -13,13 +25,45 @@ export class FormsController {
     return this.formsService.create(
       body.type,
       { ...body.baseData, createdBy: user },
-      body.specificData
+      body.specificData,
     );
   }
 
   @Get()
-  async getPendingForms() {
+  async getForms(@CurrentUser() user: User) {
+    return this.formsService.getFormsByUser(user);
+  }
+
+  @Get("pending")
+  async getPendingForms(@CurrentUser() user: User) {
+    if (user.role !== UserRole.DIRECTOR) {
+      throw new ForbiddenException(
+        "Solo directores pueden listar formularios pendientes",
+      );
+    }
+
     return this.formsService.getPendings();
+  }
+
+  @Get(":id")
+  @UseGuards(OwnerGuard)
+  @OwnerCheck({
+    entity: FormEntity,
+    idField: "id",
+    ownerField: "createdBy.id",
+    relations: ["createdBy"],
+  })
+  async getById(@Param("id", ParseIntPipe) id: number) {
+    return this.formsService.getById(id);
+  }
+
+  @Patch(":id/review")
+  async reviewForm(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() reviewDto: ReviewFormDto,
+    @CurrentUser() reviewer: User,
+  ) {
+    return this.formsService.reviewForm(id, reviewDto, reviewer);
   }
 
   /*

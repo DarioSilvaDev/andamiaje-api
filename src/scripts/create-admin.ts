@@ -1,16 +1,13 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "../app.module";
 import { UserRepository } from "@/repositories/user.repository";
-import { getRepositoryToken } from "@nestjs/typeorm";
 import { AccountStatus, UserRole } from "@/commons/enums";
 
 async function createAdminUser() {
   const app = await NestFactory.createApplicationContext(AppModule);
 
   try {
-    const userRepository = app.get<UserRepository>(
-      getRepositoryToken(UserRepository)
-    );
+    const userRepository = app.get<UserRepository>(UserRepository);
 
     // Verificar si ya existe un usuario director
     const existingDirector = await userRepository.findByRole(UserRole.DIRECTOR);
@@ -25,6 +22,8 @@ async function createAdminUser() {
       firstName: "Administrador",
       lastName: "Sistema",
       email: "admin@andamiaje.com",
+      documentNumber: "000000001",
+      phone: "0000000000",
       password: "admin123",
       role: UserRole.DIRECTOR,
       accountStatus: AccountStatus.ACTIVE,
@@ -37,7 +36,7 @@ async function createAdminUser() {
     console.log("👤 Usuario: admin");
     console.log("🔑 Contraseña: admin123");
     console.log(
-      "⚠️  IMPORTANTE: Cambia la contraseña después del primer login"
+      "⚠️  IMPORTANTE: Cambia la contraseña después del primer login",
     );
   } catch (error) {
     console.error("❌ Error al crear usuario administrador:", error.message);

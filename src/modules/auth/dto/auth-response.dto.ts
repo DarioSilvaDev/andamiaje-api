@@ -22,7 +22,7 @@ export class AuthResponseDto {
     firstName: string;
     lastName: string;
     email: string;
-    role: UserRole;
+    role: UserRole | null;
     accountStatus: AccountStatus;
   };
 
