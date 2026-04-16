@@ -6,6 +6,11 @@ export enum FormReviewStatus {
   REJECTED = "REJECTED",
 }
 
+export enum FormReviewHistoryAction {
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+}
+
 export interface FormUserSnapshotDto {
   id: number;
   fullName: string;
@@ -27,6 +32,16 @@ export interface FormReviewDto {
   rejectionReason: string | null;
   fileUrl: string | null;
   reviewedAt: Date | null;
+  history: FormReviewHistoryItemDto[];
+}
+
+export interface FormReviewHistoryItemDto {
+  id: number;
+  action: FormReviewHistoryAction;
+  reason: string | null;
+  reviewedAt: Date;
+  reviewedBy: FormUserSnapshotDto;
+  fileUrl: string | null;
 }
 
 export interface FormResponseDto {

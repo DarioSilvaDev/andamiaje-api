@@ -1,25 +1,45 @@
+import {
+  CompanionFollowupForm,
+  Document,
+  FamilyFollowupForm,
+  FormEntity,
+  FormReviewAction,
+  FormReviewAudit,
+  InvoiceForm,
+  MonthlyReportForm,
+  User,
+} from "@/entities";
 import { ActaForm } from "@/entities/acta.form.entity";
 import { AdmissionForm } from "@/entities/admissions.entity";
-import { Document } from "@/entities/document.entity";
-import { FormEntity } from "@/entities/form.entity";
 import { PlanForm } from "@/entities/planForm.entity";
 import { SemestralReportForm } from "@/entities/semestral_reports.entity";
 import { FormFactory } from "@/factory/form.factory";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { TDocumentDefinitions } from "pdfmake/interfaces";
 import { In, Repository } from "typeorm";
 import { FORMTYPE, UserRole } from "../../commons/enums";
-import { User } from "@/entities";
-import { ReviewFormDto } from "./dto/review-form.dto";
-import { PrinterService } from "../printer/printer.service";
-import { TDocumentDefinitions } from "pdfmake/interfaces";
+import {
+  buildAdmissionPdf,
+  buildCompanionFollowupPdf,
+  buildFamilyFollowupPdf,
+  buildInvoicePdf,
+  buildMonthlyReportPdf,
+  buildPlanPdf,
+  buildSemestralPdf,
+} from "../pdfReports/form-pdf.builders";
 import { buildActa } from "../pdfReports/actas.pdf.builder";
+import { PrinterService } from "../printer/printer.service";
+import { NotificationsService } from "../notifications/notifications.service";
 import { StorageService } from "../storage/storage.service";
 import {
   FormResponseDto,
+  FormReviewHistoryAction,
+  FormReviewHistoryItemDto,
   FormReviewStatus,
   FormUserSnapshotDto,
 } from "./dto/form-response.dto";
+import { ReviewFormDto } from "./dto/review-form.dto";
 
 @Injectable()
 export class FormsService {
@@ -34,11 +54,22 @@ export class FormsService {
     private readonly semestralRepository: Repository<SemestralReportForm>,
     @InjectRepository(ActaForm)
     private readonly actaRepository: Repository<ActaForm>,
+    @InjectRepository(MonthlyReportForm)
+    private readonly monthlyRepository: Repository<MonthlyReportForm>,
+    @InjectRepository(CompanionFollowupForm)
+    private readonly companionRepository: Repository<CompanionFollowupForm>,
+    @InjectRepository(FamilyFollowupForm)
+    private readonly familyRepository: Repository<FamilyFollowupForm>,
+    @InjectRepository(InvoiceForm)
+    private readonly invoiceRepository: Repository<InvoiceForm>,
     @InjectRepository(Document)
     private readonly documentRepository: Repository<Document>,
+    @InjectRepository(FormReviewAudit)
+    private readonly formReviewAuditRepository: Repository<FormReviewAudit>,
     private readonly printerService: PrinterService,
     private readonly storageService: StorageService,
     private readonly formFactory: FormFactory,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(
@@ -47,6 +78,7 @@ export class FormsService {
     specificData: Record<string, any>,
   ): Promise<FormResponseDto> {
     const normalizedBaseData = this.normalizeBaseData(baseData);
+
     const normalizedSpecificData = this.normalizeSpecificData(
       type,
       specificData,
@@ -73,9 +105,9 @@ export class FormsService {
       order: { createdAt: "DESC" },
     });
 
-    const documentsMap = await this.findDocumentsByFormIds(
-      forms.map((form) => form.id),
-    );
+    const formIds = forms.map((form) => form.id);
+    const documentsMap = await this.findDocumentsByFormIds(formIds);
+    const reviewHistoryMap = await this.findReviewHistoryByFormIds(formIds);
 
     const pendingForms = forms.filter((form) => {
       const document = documentsMap.get(form.id);
@@ -84,7 +116,11 @@ export class FormsService {
 
     return Promise.all(
       pendingForms.map((form) =>
-        this.buildFormResponse(form, documentsMap.get(form.id) || null),
+        this.buildFormResponse(
+          form,
+          documentsMap.get(form.id) || null,
+          reviewHistoryMap.get(form.id) || [],
+        ),
       ),
     );
   }
@@ -102,13 +138,17 @@ export class FormsService {
             order: { createdAt: "DESC" },
           });
 
-    const documentsMap = await this.findDocumentsByFormIds(
-      forms.map((form) => form.id),
-    );
+    const formIds = forms.map((form) => form.id);
+    const documentsMap = await this.findDocumentsByFormIds(formIds);
+    const reviewHistoryMap = await this.findReviewHistoryByFormIds(formIds);
 
     return Promise.all(
       forms.map((form) =>
-        this.buildFormResponse(form, documentsMap.get(form.id) || null),
+        this.buildFormResponse(
+          form,
+          documentsMap.get(form.id) || null,
+          reviewHistoryMap.get(form.id) || [],
+        ),
       ),
     );
   }
@@ -122,7 +162,13 @@ export class FormsService {
       order: { updatedAt: "DESC" },
     });
 
-    return this.buildFormResponse(form, document || null);
+    const reviewHistoryMap = await this.findReviewHistoryByFormIds([id]);
+
+    return this.buildFormResponse(
+      form,
+      document || null,
+      reviewHistoryMap.get(id) || [],
+    );
   }
 
   async reviewForm(
@@ -147,6 +193,8 @@ export class FormsService {
       await this.formRepository.manager.transaction(async (manager) => {
         const transactionalFormRepository = manager.getRepository(FormEntity);
         const transactionalDocumentRepository = manager.getRepository(Document);
+        const transactionalReviewAuditRepository =
+          manager.getRepository(FormReviewAudit);
 
         const transactionalForm = await transactionalFormRepository.findOne({
           where: { id: formId },
@@ -180,8 +228,23 @@ export class FormsService {
           document.rejectionReason =
             reviewDto.rejectionReason || reviewDto.notes || null;
           transactionalForm.approvedBy = null;
+
           await transactionalFormRepository.save(transactionalForm);
-          await transactionalDocumentRepository.save(document);
+          const savedDocument =
+            await transactionalDocumentRepository.save(document);
+
+          await transactionalReviewAuditRepository.save(
+            transactionalReviewAuditRepository.create({
+              form: transactionalForm,
+              document: savedDocument,
+              reviewedBy: reviewerRef,
+              action: FormReviewAction.REJECTED,
+              reason: document.rejectionReason,
+              metadata: {
+                approved: false,
+              },
+            }),
+          );
           return;
         }
 
@@ -191,7 +254,22 @@ export class FormsService {
         transactionalForm.approvedBy = reviewerRef;
 
         await transactionalFormRepository.save(transactionalForm);
-        await transactionalDocumentRepository.save(document);
+        const savedDocument =
+          await transactionalDocumentRepository.save(document);
+
+        await transactionalReviewAuditRepository.save(
+          transactionalReviewAuditRepository.create({
+            form: transactionalForm,
+            document: savedDocument,
+            reviewedBy: reviewerRef,
+            action: FormReviewAction.APPROVED,
+            reason: null,
+            metadata: {
+              approved: true,
+              fileUrl: uploadedKey,
+            },
+          }),
+        );
       });
     } catch (error) {
       if (uploadedKey) {
@@ -200,7 +278,21 @@ export class FormsService {
       throw error;
     }
 
-    return this.getById(formId);
+    const reviewedForm = await this.getById(formId);
+
+    if (reviewedForm.createdBy?.id && form.createdBy?.email) {
+      await this.notificationsService.notifyFormReviewed({
+        formId: reviewedForm.id,
+        formType: reviewedForm.type,
+        approved: reviewedForm.review.status === FormReviewStatus.APPROVED,
+        rejectionReason: reviewedForm.review.rejectionReason,
+        fileUrl: reviewedForm.review.fileUrl,
+        reviewerId: reviewer.id,
+        recipientEmail: form.createdBy.email,
+      });
+    }
+
+    return reviewedForm;
   }
 
   private normalizeBaseData(
@@ -253,6 +345,42 @@ export class FormsService {
           suggestions: specificData.suggestions,
         };
 
+      case FORMTYPE.REPORTE_MENSUAL:
+        return {
+          professional: createdBy,
+          period: specificData.period,
+          activities: specificData.activities,
+          progress: specificData.progress,
+          observations: specificData.observations,
+        };
+
+      case FORMTYPE.SEGUIMIENTO_ACOMPANANTE:
+        return {
+          professional: createdBy,
+          period: specificData.period,
+          accompanimentDetail: specificData.accompanimentDetail,
+          studentEvolution: specificData.studentEvolution,
+          recommendations: specificData.recommendations,
+        };
+
+      case FORMTYPE.SEGUIMIENTO_FAMILIA:
+        return {
+          professional: createdBy,
+          period: specificData.period,
+          familyContext: specificData.familyContext,
+          interventionSummary: specificData.interventionSummary,
+          recommendations: specificData.recommendations,
+        };
+
+      case FORMTYPE.FACTURA:
+        return {
+          issuerName: specificData.issuerName,
+          taxId: specificData.taxId,
+          billingPeriod: specificData.billingPeriod,
+          amount: specificData.amount,
+          serviceDescription: specificData.serviceDescription,
+        };
+
       case FORMTYPE.INFORME_ADMISION:
         return {
           introduction: specificData.introduction,
@@ -280,6 +408,14 @@ export class FormsService {
         return this.semestralRepository.save(child);
       case FORMTYPE.ACTAS:
         return this.actaRepository.save(child);
+      case FORMTYPE.REPORTE_MENSUAL:
+        return this.monthlyRepository.save(child);
+      case FORMTYPE.SEGUIMIENTO_ACOMPANANTE:
+        return this.companionRepository.save(child);
+      case FORMTYPE.SEGUIMIENTO_FAMILIA:
+        return this.familyRepository.save(child);
+      case FORMTYPE.FACTURA:
+        return this.invoiceRepository.save(child);
       default:
         throw new Error(`Unsupported form type: ${type}`);
     }
@@ -325,9 +461,41 @@ export class FormsService {
     return documentsMap;
   }
 
+  private async findReviewHistoryByFormIds(
+    formIds: number[],
+  ): Promise<Map<number, FormReviewAudit[]>> {
+    if (!formIds.length) {
+      return new Map();
+    }
+
+    const audits = await this.formReviewAuditRepository.find({
+      where: { form: { id: In(formIds) } },
+      relations: ["form", "reviewedBy"],
+      order: { createdAt: "DESC" },
+    });
+
+    const historyMap = new Map<number, FormReviewAudit[]>();
+
+    for (const audit of audits) {
+      const formId = audit.form?.id;
+      if (!formId) {
+        continue;
+      }
+
+      if (!historyMap.has(formId)) {
+        historyMap.set(formId, []);
+      }
+
+      historyMap.get(formId).push(audit);
+    }
+
+    return historyMap;
+  }
+
   private async buildFormResponse(
     form: FormEntity,
     document: Document | null,
+    reviewHistory: FormReviewAudit[],
   ): Promise<FormResponseDto> {
     const specificData = await this.getSpecificData(form);
 
@@ -347,7 +515,7 @@ export class FormsService {
       approvedBy: form.approvedBy
         ? this.mapUserSnapshot(form.approvedBy)
         : null,
-      review: this.buildReviewStatus(document),
+      review: this.buildReviewStatus(document, reviewHistory),
       createdAt: form.createdAt,
       updatedAt: form.updatedAt,
     };
@@ -361,14 +529,40 @@ export class FormsService {
     };
   }
 
-  private buildReviewStatus(document: Document | null) {
+  private mapReviewHistory(
+    history: FormReviewAudit[],
+  ): FormReviewHistoryItemDto[] {
+    return history.map((item) => ({
+      id: item.id,
+      action:
+        item.action === FormReviewAction.APPROVED
+          ? FormReviewHistoryAction.APPROVED
+          : FormReviewHistoryAction.REJECTED,
+      reason: item.reason || null,
+      reviewedAt: item.createdAt,
+      reviewedBy: this.mapUserSnapshot(item.reviewedBy),
+      fileUrl:
+        item.action === FormReviewAction.APPROVED
+          ? item.metadata?.fileUrl || null
+          : null,
+    }));
+  }
+
+  private buildReviewStatus(
+    document: Document | null,
+    reviewHistory: FormReviewAudit[],
+  ) {
+    const mappedHistory = this.mapReviewHistory(reviewHistory);
+    const lastHistoryItem = mappedHistory[0] || null;
+
     if (!document) {
       return {
         status: FormReviewStatus.PENDING,
         approved: null,
         rejectionReason: null,
         fileUrl: null,
-        reviewedAt: null,
+        reviewedAt: lastHistoryItem?.reviewedAt || null,
+        history: mappedHistory,
       };
     }
 
@@ -378,7 +572,8 @@ export class FormsService {
         approved: true,
         rejectionReason: null,
         fileUrl: document.fileUrl,
-        reviewedAt: document.updatedAt,
+        reviewedAt: lastHistoryItem?.reviewedAt || document.updatedAt,
+        history: mappedHistory,
       };
     }
 
@@ -388,7 +583,8 @@ export class FormsService {
         approved: false,
         rejectionReason: document.rejectionReason,
         fileUrl: null,
-        reviewedAt: document.updatedAt,
+        reviewedAt: lastHistoryItem?.reviewedAt || document.updatedAt,
+        history: mappedHistory,
       };
     }
 
@@ -397,7 +593,8 @@ export class FormsService {
       approved: false,
       rejectionReason: null,
       fileUrl: null,
-      reviewedAt: document.updatedAt,
+      reviewedAt: lastHistoryItem?.reviewedAt || document.updatedAt,
+      history: mappedHistory,
     };
   }
 
@@ -478,6 +675,87 @@ export class FormsService {
         };
       }
 
+      case FORMTYPE.REPORTE_MENSUAL: {
+        const monthly = await this.monthlyRepository.findOne({
+          where: { form: { id: form.id } },
+          relations: ["professional"],
+        });
+
+        if (!monthly) {
+          return null;
+        }
+
+        return {
+          professional: monthly.professional
+            ? this.mapUserSnapshot(monthly.professional)
+            : null,
+          period: monthly.period,
+          activities: monthly.activities,
+          progress: monthly.progress,
+          observations: monthly.observations,
+        };
+      }
+
+      case FORMTYPE.SEGUIMIENTO_ACOMPANANTE: {
+        const companion = await this.companionRepository.findOne({
+          where: { form: { id: form.id } },
+          relations: ["professional"],
+        });
+
+        if (!companion) {
+          return null;
+        }
+
+        return {
+          professional: companion.professional
+            ? this.mapUserSnapshot(companion.professional)
+            : null,
+          period: companion.period,
+          accompanimentDetail: companion.accompanimentDetail,
+          studentEvolution: companion.studentEvolution,
+          recommendations: companion.recommendations,
+        };
+      }
+
+      case FORMTYPE.SEGUIMIENTO_FAMILIA: {
+        const family = await this.familyRepository.findOne({
+          where: { form: { id: form.id } },
+          relations: ["professional"],
+        });
+
+        if (!family) {
+          return null;
+        }
+
+        return {
+          professional: family.professional
+            ? this.mapUserSnapshot(family.professional)
+            : null,
+          period: family.period,
+          familyContext: family.familyContext,
+          interventionSummary: family.interventionSummary,
+          recommendations: family.recommendations,
+        };
+      }
+
+      case FORMTYPE.FACTURA: {
+        const invoice = await this.invoiceRepository.findOne({
+          where: { form: { id: form.id } },
+        });
+
+        if (!invoice) {
+          return null;
+        }
+
+        return {
+          issuerName: invoice.issuerName,
+          taxId: invoice.taxId,
+          billingPeriod: invoice.billingPeriod,
+          amount: Number(invoice.amount),
+          serviceDescription: invoice.serviceDescription,
+        };
+      }
+
       default:
         return null;
     }
@@ -489,7 +767,6 @@ export class FormsService {
     if (form.type === FORMTYPE.ACTAS) {
       const acta = await this.actaRepository.findOne({
         where: { form: { id: form.id } },
-        relations: ["form", "form.createdBy"],
       });
 
       if (acta) {
@@ -502,6 +779,126 @@ export class FormsService {
           },
           {},
         );
+      }
+    }
+
+    if (form.type === FORMTYPE.INFORME_ADMISION) {
+      const admission = await this.admissionRepository.findOne({
+        where: { form: { id: form.id } },
+      });
+
+      if (admission) {
+        return buildAdmissionPdf({
+          patient: form.patient || "Sin dato",
+          diagnosis: form.diagnosis || "Sin dato",
+          introduction: admission.introduction,
+          characterization: admission.characterization,
+          professional: form.createdBy.fullName,
+          date: form.fecha,
+        });
+      }
+    }
+
+    if (form.type === FORMTYPE.PLAN_TRABAJO) {
+      const plan = await this.planRepository.findOne({
+        where: { form: { id: form.id } },
+      });
+
+      if (plan) {
+        return buildPlanPdf({
+          patient: form.patient || "Sin dato",
+          period: plan.period,
+          fundamentation: plan.fundamentation,
+          generalObjectives: plan.generalObjectives,
+          specificObjectives: plan.specificObjectives,
+          workModality: plan.workModality,
+          professional: form.createdBy.fullName,
+        });
+      }
+    }
+
+    if (form.type === FORMTYPE.INFORME_SEMESTRAL) {
+      const semestral = await this.semestralRepository.findOne({
+        where: { form: { id: form.id } },
+      });
+
+      if (semestral) {
+        return buildSemestralPdf({
+          patient: form.patient || "Sin dato",
+          period: semestral.period,
+          characterization: semestral.characterization,
+          periodEvolution: semestral.periodEvolution,
+          suggestions: semestral.suggestions,
+          professional: form.createdBy.fullName,
+        });
+      }
+    }
+
+    if (form.type === FORMTYPE.REPORTE_MENSUAL) {
+      const monthly = await this.monthlyRepository.findOne({
+        where: { form: { id: form.id } },
+      });
+
+      if (monthly) {
+        return buildMonthlyReportPdf({
+          patient: form.patient || "Sin dato",
+          period: monthly.period,
+          activities: monthly.activities,
+          progress: monthly.progress,
+          observations: monthly.observations,
+          professional: form.createdBy.fullName,
+        });
+      }
+    }
+
+    if (form.type === FORMTYPE.SEGUIMIENTO_ACOMPANANTE) {
+      const companion = await this.companionRepository.findOne({
+        where: { form: { id: form.id } },
+      });
+
+      if (companion) {
+        return buildCompanionFollowupPdf({
+          patient: form.patient || "Sin dato",
+          period: companion.period,
+          accompanimentDetail: companion.accompanimentDetail,
+          studentEvolution: companion.studentEvolution,
+          recommendations: companion.recommendations,
+          professional: form.createdBy.fullName,
+        });
+      }
+    }
+
+    if (form.type === FORMTYPE.SEGUIMIENTO_FAMILIA) {
+      const family = await this.familyRepository.findOne({
+        where: { form: { id: form.id } },
+      });
+
+      if (family) {
+        return buildFamilyFollowupPdf({
+          patient: form.patient || "Sin dato",
+          period: family.period,
+          familyContext: family.familyContext,
+          interventionSummary: family.interventionSummary,
+          recommendations: family.recommendations,
+          professional: form.createdBy.fullName,
+        });
+      }
+    }
+
+    if (form.type === FORMTYPE.FACTURA) {
+      const invoice = await this.invoiceRepository.findOne({
+        where: { form: { id: form.id } },
+      });
+
+      if (invoice) {
+        return buildInvoicePdf({
+          patient: form.patient || "Sin dato",
+          issuerName: invoice.issuerName,
+          taxId: invoice.taxId,
+          billingPeriod: invoice.billingPeriod,
+          amount: Number(invoice.amount),
+          serviceDescription: invoice.serviceDescription,
+        });
       }
     }
 

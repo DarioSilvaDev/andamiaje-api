@@ -6,6 +6,10 @@ import { AdmissionFormDto } from "./create-admission-form.dto";
 import { PlanFormDto } from "./create-plan-form.dto";
 import { SemestralReportDto } from "./create-semestral-report.dto";
 import { ActaFormDto } from "./create-actas-form.dto";
+import { MonthlyReportDto } from "./create-monthly-report.dto";
+import { CompanionFollowupDto } from "./create-companion-followup.dto";
+import { FamilyFollowupDto } from "./create-family-followup.dto";
+import { InvoiceFormDto } from "./create-invoice-form.dto";
 import { SpecificDataType } from "./specific-data.dto";
 
 export class CreateFormDto {
@@ -34,4 +38,8 @@ export const SpecificFormDtoMap = {
   [FORMTYPE.INFORME_ADMISION]: AdmissionFormDto,
   [FORMTYPE.PLAN_TRABAJO]: PlanFormDto,
   [FORMTYPE.INFORME_SEMESTRAL]: SemestralReportDto,
+  [FORMTYPE.REPORTE_MENSUAL]: MonthlyReportDto,
+  [FORMTYPE.SEGUIMIENTO_ACOMPANANTE]: CompanionFollowupDto,
+  [FORMTYPE.SEGUIMIENTO_FAMILIA]: FamilyFollowupDto,
+  [FORMTYPE.FACTURA]: InvoiceFormDto,
 };

@@ -1,7 +1,12 @@
 export { ActaForm } from "./acta.form.entity";
 export { AdmissionForm } from "./admissions.entity";
+export { CompanionFollowupForm } from "./companion-followup.form.entity";
 export { Document } from "./document.entity";
+export { FamilyFollowupForm } from "./family-followup.form.entity";
 export { FormEntity } from "./form.entity";
+export { FormReviewAudit, FormReviewAction } from "./form-review-audit.entity";
+export { InvoiceForm } from "./invoice.form.entity";
+export { MonthlyReportForm } from "./monthly-report.form.entity";
 export { PlanForm } from "./planForm.entity";
 export { SemestralReportForm } from "./semestral_reports.entity";
 export { User } from "./user.entity";

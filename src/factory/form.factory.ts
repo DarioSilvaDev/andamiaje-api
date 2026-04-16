@@ -1,7 +1,11 @@
 import { FORMTYPE } from "@/commons/enums";
 import { ActaForm } from "@/entities/acta.form.entity";
 import { AdmissionForm } from "@/entities/admissions.entity";
+import { CompanionFollowupForm } from "@/entities/companion-followup.form.entity";
+import { FamilyFollowupForm } from "@/entities/family-followup.form.entity";
 import { FormEntity } from "@/entities/form.entity";
+import { InvoiceForm } from "@/entities/invoice.form.entity";
+import { MonthlyReportForm } from "@/entities/monthly-report.form.entity";
 import { SemestralReportForm } from "@/entities/semestral_reports.entity";
 import { PlanForm } from "@/entities/planForm.entity";
 import { Injectable } from "@nestjs/common";
@@ -11,7 +15,7 @@ export class FormFactory {
   createForm(
     type: FORMTYPE,
     baseData: Partial<FormEntity>,
-    specificData?: any
+    specificData?: any,
   ): { form: FormEntity; child: any } {
     const form = new FormEntity();
     Object.assign(form, baseData, { type });
@@ -39,6 +43,30 @@ export class FormFactory {
 
       case FORMTYPE.ACTAS:
         childEntity = new ActaForm();
+        Object.assign(childEntity, specificData);
+        childEntity.form = form;
+        break;
+
+      case FORMTYPE.REPORTE_MENSUAL:
+        childEntity = new MonthlyReportForm();
+        Object.assign(childEntity, specificData);
+        childEntity.form = form;
+        break;
+
+      case FORMTYPE.SEGUIMIENTO_ACOMPANANTE:
+        childEntity = new CompanionFollowupForm();
+        Object.assign(childEntity, specificData);
+        childEntity.form = form;
+        break;
+
+      case FORMTYPE.SEGUIMIENTO_FAMILIA:
+        childEntity = new FamilyFollowupForm();
+        Object.assign(childEntity, specificData);
+        childEntity.form = form;
+        break;
+
+      case FORMTYPE.FACTURA:
+        childEntity = new InvoiceForm();
         Object.assign(childEntity, specificData);
         childEntity.form = form;
         break;
