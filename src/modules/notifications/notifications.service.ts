@@ -1,9 +1,13 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { User } from "@/entities";
+import { NotificationEventBus } from "./notification-event-bus.service";
+import { NOTIFICATION_EVENTS } from "./notifications.events";
 
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
+
+  constructor(private readonly eventBus: NotificationEventBus) {}
 
   async notifyDirectorsNewRegistration(
     directors: User[],
@@ -16,31 +20,33 @@ export class NotificationsService {
       return;
     }
 
-    const payload = {
-      type: "NEW_USER_REGISTRATION",
+    this.eventBus.emit(NOTIFICATION_EVENTS.USER_REGISTRATION_REQUESTED, {
+      userId: pendingUser.id,
+      fullName: pendingUser.fullName,
+      documentNumber: pendingUser.documentNumber,
+      email: pendingUser.email,
       recipientEmails: directors.map((director) => director.email),
-      data: {
-        userId: pendingUser.id,
-        fullName: pendingUser.fullName,
-        documentNumber: pendingUser.documentNumber,
-        email: pendingUser.email,
-      },
-    };
-
-    this.logger.log(`Email queued ${JSON.stringify(payload)}`);
+    });
   }
 
   async sendWelcomeEmail(user: User): Promise<void> {
-    const payload = {
-      type: "WELCOME_APPROVED_USER",
+    this.eventBus.emit(NOTIFICATION_EVENTS.USER_APPROVED, {
+      userId: user.id,
+      fullName: user.fullName,
+      role: user.role,
       recipientEmail: user.email,
-      data: {
-        userId: user.id,
-        fullName: user.fullName,
-        role: user.role,
-      },
-    };
+    });
+  }
 
-    this.logger.log(`Email queued ${JSON.stringify(payload)}`);
+  async notifyFormReviewed(payload: {
+    formId: number;
+    formType: string;
+    approved: boolean;
+    rejectionReason: string | null;
+    fileUrl: string | null;
+    reviewerId: number;
+    recipientEmail: string;
+  }): Promise<void> {
+    this.eventBus.emit(NOTIFICATION_EVENTS.FORM_REVIEWED, payload);
   }
 }
