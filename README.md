@@ -1,190 +1,188 @@
 # Andamiaje API
 
-API para gestión de usuarios y archivos con sistema de roles, construida con NestJS, TypeORM y PostgreSQL.
+API backend en NestJS para onboarding de usuarios, gestion de formularios, revision documental con PDF y almacenamiento en B2/S3.
 
-## 🚀 Características
+## Estado actual
 
-- **Autenticación JWT** con refresh tokens
-- **Sistema de roles**: Director, Terapeuta, Acompañante Externo, Coordinador
-- **Gestión de documentos** con estados de aprobación
-- **Carga de archivos** con validaciones
-- **Generación automática de PDFs** para documentos aprobados
-- **Logging centralizado** con Winston
-- **Validación de datos** con class-validator
-- **Documentación automática** con Swagger
-- **Arquitectura modular** y escalable
+- Autenticacion JWT con modo hibrido (cookies httpOnly + Bearer)
+- Flujo de cuenta por estados: `PENDING_APPROVAL -> PENDING_SIGNATURE -> ACTIVE` (con `REJECTED` y `DISABLED`)
+- Guard global JWT con soporte de rutas publicas (`@Public()`)
+- Validacion global de DTOs y formato de errores consistente
+- Flujo de formularios con aprobacion/rechazo, generacion de PDF, persistencia en `documents` y auditoria de revisiones
+- Storage en B2/S3 con ownership y validacion estricta de tipo de archivo
+- Notificaciones desacopladas via event bus interno + provider reemplazable
 
-## 🛠️ Tecnologías
+## Stack tecnico
 
-- **Backend**: NestJS 10.x
-- **Base de datos**: PostgreSQL con TypeORM
-- **Autenticación**: JWT + Passport
-- **Validación**: class-validator + class-transformer
-- **Logging**: Winston
-- **Documentación**: Swagger/OpenAPI
-- **Lenguaje**: TypeScript
+- NestJS 10
+- TypeORM + PostgreSQL
+- JWT + Passport
+- class-validator + class-transformer
+- Swagger/OpenAPI
+- PDFMake
+- AWS SDK v3 (compatible B2 S3 API)
 
-## 📋 Prerrequisitos
+## Requisitos
 
 - Node.js 18+
 - PostgreSQL 12+
-- npm o yarn
+- npm
 
-## 🚀 Instalación
+## Instalacion rapida
 
-1. **Clonar el repositorio**
-
-```bash
-git clone <url-del-repositorio>
-cd andamiaje-api
-```
-
-2. **Instalar dependencias**
+1. Instalar dependencias
 
 ```bash
 npm install
 ```
 
-3. **Configurar variables de entorno**
+2. Crear `.env` desde `env.example` y completar valores requeridos
 
-```bash
-cp .env.example .env
-```
+Variables clave obligatorias:
 
-Editar el archivo `.env` con tus configuraciones:
+- `DATABASE_URL`
+- `JWT_SECRET`
+- `JWT_REFRESH_SECRET`
+- `B2_ENDPOINT`
+- `B2_REGION`
+- `B2_BUCKET`
+- `B2_KEY_ID`
+- `B2_APP_KEY`
+- `B2_BUCKET_ID`
 
-```env
-# Base de datos
-DB_HOST=localhost
-DB_PORT=5432
-DB_USERNAME=tu_usuario
-DB_PASSWORD=tu_password
-DB_DATABASE=andamiaje_db
-
-# JWT
-JWT_SECRET=tu_jwt_secret_super_seguro
-JWT_REFRESH_SECRET=tu_refresh_secret_super_seguro
-```
-
-4. **Crear la base de datos**
-
-```sql
-CREATE DATABASE andamiaje_db;
-```
-
-5. **Ejecutar migraciones** (opcional en desarrollo)
+3. Ejecutar migraciones
 
 ```bash
 npm run migration:run
 ```
 
-6. **Iniciar la aplicación**
+4. Levantar la API
 
 ```bash
-# Desarrollo
 npm run start:dev
-
-# Producción
-npm run build
-npm run start:prod
 ```
 
-## 📚 Endpoints de la API
+## Configuracion
 
-### Autenticación
+Variables importantes:
 
-- `POST /api/v1/auth/login` - Iniciar sesión
-- `POST /api/v1/auth/refresh` - Renovar token
-- `GET /api/v1/auth/profile` - Obtener perfil
-- `POST /api/v1/auth/logout` - Cerrar sesión
+- `PORT` (default `5001`)
+- `API_PREFIX` (default `api/v1`)
+- `ALLOWED_ORIGINS` (CSV de origenes permitidos para CORS)
+- `DB_SYNCHRONIZE` (recomendado `false`)
+- `DB_LOGGING`
+- `DB_SSL` (default `true`)
+- `ALLOWED_FILE_TYPES` (default `pdf,jpg,jpeg,png`)
 
-### Documentación
+Swagger:
 
-- `GET /api/docs` - Documentación Swagger
+- `GET /api/docs`
 
-## 🔐 Roles y Permisos
+Health:
 
-- **Director**: Acceso completo, puede aprobar documentos
-- **Terapeuta**: Crear y editar documentos propios
-- **Acompañante Externo**: Crear y editar documentos propios
-- **Coordinador**: Crear y editar documentos propios
+- `GET /api/v1/`
 
-## 📁 Estructura del Proyecto
+## Endpoints principales
 
-```
+Base URL por defecto: `http://localhost:5001/api/v1`
+
+### Auth
+
+- `POST /auth/register`
+- `POST /auth/reapply`
+- `POST /auth/login`
+- `POST /auth/refresh`
+- `GET /auth/profile`
+- `POST /auth/logout`
+
+### Users
+
+- `POST /users` (solo director)
+- `GET /users`
+- `GET /users/pending` (solo director)
+- `PATCH /users/:id/review` (solo director)
+- `GET /users/:id` (ownership)
+- `PUT /users/:id` (ownership)
+- `DELETE /users/:id` (ownership, desactivacion logica)
+
+### Forms
+
+- `POST /forms`
+- `GET /forms`
+- `GET /forms/pending` (solo director)
+- `GET /forms/:id` (ownership)
+- `PATCH /forms/:id/review` (solo director)
+
+### Storage
+
+- `POST /storage/upload?type=<TIPO>`
+- `GET /storage/download?key=<KEY>`
+- `GET /storage/file/:key`
+- `DELETE /storage/file?key=<KEY>`
+- `DELETE /storage/file/:key`
+
+## Tipos de formulario soportados
+
+- `ACTAS`
+- `INFORME_ADMISION`
+- `PLAN_TRABAJO`
+- `INFORME_SEMESTRAL`
+- `REPORTE_MENSUAL`
+- `SEGUIMIENTO_ACOMPANIANTE_EXTERNO`
+- `SEGUIMIENTO_FAMILIA`
+- `FACTURA`
+
+Cada revision (`PATCH /forms/:id/review`) genera/actualiza:
+
+- estado en `documents`
+- PDF (si aprobado)
+- registro de auditoria en `form_review_audits`
+- historial de revision en la respuesta (`review.history`)
+
+## Scripts utiles
+
+- `npm run start:dev`
+- `npm run build`
+- `npm run start:prod`
+- `npm run test`
+- `npm run test:cov`
+- `npm run migration:generate`
+- `npm run migration:run`
+- `npm run migration:revert`
+- `npm run migration:show`
+
+## Estructura del proyecto
+
+```text
 src/
-├── config/           # Configuraciones (DB, logging, envs)
-├── entities/         # Entidades de TypeORM
-├── repositories/     # Repositorios personalizados
-├── modules/          # Módulos de la aplicación
-│   ├── auth/         # Autenticación y autorización
-│   ├── users/        # Gestión de usuarios
-│   └── documents/    # Gestión de documentos
-├── commons/          # Utilidades y constantes
-└── main.ts           # Punto de entrada
+  commons/         # filtros, interceptores, constantes
+  config/          # envs, CORS, DB data source
+  entities/        # modelos TypeORM
+  factory/         # fabrica de formularios por tipo
+  migrations/      # migraciones de base de datos
+  modules/
+    auth/          # login, refresh, guards, decorators
+    users/         # CRUD y aprobacion de usuarios
+    forms/         # alta/revision/listado de formularios
+    storage/       # subida/descarga/eliminacion de archivos
+    notifications/ # event bus y provider de notificaciones
+    printer/       # generacion de PDFs
+    pdfReports/    # builders PDF por tipo
+  repositories/    # repositorios custom
+  main.ts
 ```
 
-## 🧪 Testing
+## Testing
+
+Actualmente hay cobertura unitaria en auth/guards.
 
 ```bash
-# Tests unitarios
 npm run test
-
-# Tests e2e
-npm run test:e2e
-
-# Coverage
-npm run test:cov
 ```
 
-## 📝 Scripts Disponibles
+## Notas de despliegue
 
-- `npm run start:dev` - Desarrollo con hot reload
-- `npm run build` - Construir para producción
-- `npm run start:prod` - Iniciar en modo producción
-- `npm run migration:generate` - Generar migración
-- `npm run migration:run` - Ejecutar migraciones
-- `npm run migration:revert` - Revertir última migración
-
-## 🔧 Configuración
-
-### Variables de Entorno
-
-| Variable     | Descripción             | Default   |
-| ------------ | ----------------------- | --------- |
-| `PORT`       | Puerto de la aplicación | 5001      |
-| `DB_HOST`    | Host de PostgreSQL      | localhost |
-| `DB_PORT`    | Puerto de PostgreSQL    | 5432      |
-| `JWT_SECRET` | Secreto para JWT        | Requerido |
-
-### Base de Datos
-
-La aplicación usa TypeORM con PostgreSQL. Las entidades principales son:
-
-- **User**: Usuarios con roles y autenticación
-- **Document**: Documentos con estados de aprobación
-- **DocumentFile**: Archivos adjuntos a documentos
-
-## 🚀 Despliegue
-
-1. **Configurar variables de producción**
-2. **Construir la aplicación**: `npm run build`
-3. **Configurar base de datos de producción**
-4. **Ejecutar migraciones**: `npm run migration:run`
-5. **Iniciar**: `npm run start:prod`
-
-## 🤝 Contribución
-
-1. Fork el proyecto
-2. Crear una rama para tu feature
-3. Commit tus cambios
-4. Push a la rama
-5. Abrir un Pull Request
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT.
-
-## 🆘 Soporte
-
-Para soporte técnico o preguntas, contacta al equipo de desarrollo.
+- Usar `DB_SYNCHRONIZE=false` en ambientes no locales
+- Ejecutar migraciones en cada release
+- Configurar `ALLOWED_ORIGINS` segun el frontend real
+- Mantener secretos (`JWT_*`, `B2_*`, `DATABASE_URL`) fuera del repo
